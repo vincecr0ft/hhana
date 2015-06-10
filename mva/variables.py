@@ -22,7 +22,8 @@ def get_label(name, units=True, latex=False):
 
 
 def get_binning(name, category, year):
-    binning = VARIABLES[name]['binning']
+#    binning = VARIABLES[name]['binning']
+    binning = OBSERVABLES[name]['binning']
     if isinstance(binning, dict):
         if year in binning:
             binning = binning[year]
@@ -87,6 +88,25 @@ YEAR_VARIABLES = {
                 212619, 213431, 213900, 214281, 215414, 216399],
         }
     }
+}
+
+OBSERVABLES={
+    'o1': {
+        'title': r'0$_{1}$',
+        'root': '#font[152]{0_1}(#font[52]{Optimal Observable 1})',
+        'filename': 'o1',
+        'binning': [-20,-5,-2.5,0,2.5,5,20],
+        'cats': ['2J', 'VBF'],
+        'legend': 'left',
+    },
+    'dphi': {
+        'title': r'dPhi$_{jj}$',
+        'root': '#font[152]{dY}jj(#font[52]{sign delta phi})',
+        'filename': 'dphi',
+        'binning': [-5,-3.2,-2.4,-1.6,-0.8,0,0.8,1.6,2.4,3.2,5,5.1],
+        'cats': ['2J', 'VBF'],
+        'legend': 'left',
+    },
 }
 
 VARIABLES = {
@@ -511,6 +531,30 @@ VARIABLES = {
         'root': '#font[152]{#eta}(#font[52]{j}2)',
         'filename': 'jet2_eta',
         'binning': (20, -5, 5),
+        'cats': ['2J', 'VBF'],
+        'legend': 'left',
+    },
+    'jet1_phi': {
+        'title': r'jet$_{1}$ $\phi$',
+        'root': '#font[152]{#phi}(#font[52]{j}1)',
+        'filename': 'jet1_phi',
+        'binning': (20, -5, 5),
+        'cats': ['2J', 'VBF', '1J', '1J_NONBOOSTED'],
+        'legend': 'left',
+    },
+    'jet2_phi': {
+        'title': r'jet$_{2}$ $\phi$',
+        'root': '#font[152]{#phi}(#font[52]{j}2)',
+        'filename': 'jet2_phi',
+        'binning': (20, -5, 5),
+        'cats': ['2J', 'VBF'],
+        'legend': 'left',
+    },
+    'o1': {
+        'title': r'0$_{1}$',
+        'root': '#font[152]{01}(#font[52]{O}1)',
+        'filename': 'o1',
+        'binning': (6, -5, 5),
         'cats': ['2J', 'VBF'],
         'legend': 'left',
     },

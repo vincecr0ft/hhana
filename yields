@@ -11,8 +11,8 @@ categories = (
     Category_Boosted, Category_VBF)
 headers = [c.name for c in categories]
 headers.insert(0, 'sample / category')
-
-for year in (2011, 2012):
+years = [2012]
+for year in years:
     ana = Analysis(year=year)
     ana.normalize(Category_Preselection)
     higgs = Higgs(year=year, mass=125)

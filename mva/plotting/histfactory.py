@@ -42,6 +42,9 @@ def draw_channel(channel, fit=None, no_data=False,
                 sample.name, sys_name, osys.high, osys.low))
         nominal_hist.systematics = _systematics
         if sample.GetNormFactor('SigXsecOverSM') is not None:
+            XsecNF=5.8777/nominal_hist.Integral() #SM integral                                          
+            print 'scaling by ',XsecNF
+            nominal_hist.Scale(XsecNF)
             signal_hists.append(nominal_hist)
         else:
             model_hists.append(nominal_hist)

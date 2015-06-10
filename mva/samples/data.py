@@ -114,6 +114,10 @@ class Data(Sample):
         if include_weight and fields is not None:
             if 'weight' not in fields:
                 fields = list(fields) + ['weight']
+            if 'o1' not in fields:
+                fields = list(fields) + ['o1']
+            if 'dphi' not in fields:
+                fields = list(fields) + ['dphi']
 
         selection = self.cuts(category, region) & cuts
 
@@ -134,6 +138,14 @@ class Data(Sample):
                 names='weight',
                 data=weights,
                 dtypes='f8')
+        o1=self.optimate(rec)
+        if o1 is not None:
+            rec =recfunctions.rec_append_fields(
+                rec, names = 'o1', data=o1, dtypes='f8')
+        dphi=self.dphate(rec)
+        if dphi is not None:
+            rec =recfunctions.rec_append_fields(
+                rec, names = 'dphi', data=dphi, dtypes='f8')
 
         if fields is not None:
             rec = rec[fields]

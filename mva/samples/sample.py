@@ -37,6 +37,7 @@ from ..lumi import LUMI, get_lumi_uncert
 from .db import DB, TEMPFILE, get_file
 from ..cachedtable import CachedTable
 from ..variables import get_binning, get_scale
+from .calcOptObs import observize,new_observize,dphize,weight_vize,new_weight_vize
 
 BCH_UNCERT = pickle.load(open(os.path.join(CACHE_DIR, 'bch_cleaning.cache')))
 
@@ -131,6 +132,120 @@ class Sample(object):
         if 'fillstyle' not in hist_decor:
             self.hist_decor['fillstyle'] = 'solid'
         self.trigger = trigger
+
+    def optimate(self, rec):
+        pt1 = rec2array(rec[['jet1_pt']])
+        pt2 = rec2array(rec[['jet2_pt']])
+        pt3 = rec2array(rec[['jet3_pt']])
+
+        eta1 = rec2array(rec[['jet1_eta']])
+        eta2 = rec2array(rec[['jet2_eta']])
+        eta3 = rec2array(rec[['jet3_eta']])
+
+        phi1 = rec2array(rec[['jet1_phi']])
+        phi2 = rec2array(rec[['jet2_phi']])
+        phi3 = rec2array(rec[['jet3_phi']])
+
+        tpt1 = rec2array(rec[['mmc1_resonance_pt']])
+        teta1 = rec2array(rec[['mmc1_resonance_eta']])
+        tphi1 = rec2array(rec[['mmc1_resonance_phi']])
+        tm1 = rec2array(rec[['mmc1_resonance_m']])
+        numJets = rec2array(rec[['numJets']])
+
+        if phi1.size==phi2.size and phi1.size>0:
+            Opt_vec = new_observize(pt1,pt2,pt3,eta1,eta2,eta3,phi1,phi2,phi3,tpt1,teta1,tphi1,tm1,numJets)
+        else:
+            Opt_vec = np.zeros(pt1.size)
+        return Opt_vec
+
+    def dphate(self, rec):
+        pt1 = rec2array(rec[['jet1_pt']])
+        pt2 = rec2array(rec[['jet2_pt']])
+        pt3 = rec2array(rec[['jet3_pt']])
+
+        eta1 = rec2array(rec[['jet1_eta']])
+        eta2 = rec2array(rec[['jet2_eta']])
+        eta3 = rec2array(rec[['jet3_eta']])
+
+        phi1 = rec2array(rec[['jet1_phi']])
+        phi2 = rec2array(rec[['jet2_phi']])
+        phi3 = rec2array(rec[['jet3_phi']])
+
+        numJets = rec2array(rec[['numJets']])
+
+        if phi1.size==phi2.size and phi1.size>0:
+            dphi_vec = dphize(pt1,pt2,pt3,eta1,eta2,eta3,phi1,phi2,phi3,numJets)
+        else:
+            dphi_vec = np.zeros(pt1.size)
+        return dphi_vec
+
+    def optiweight(self, d_tilde, rec, weight):
+        pt1 = rec2array(rec[['jet1_pt']])
+        pt2 = rec2array(rec[['jet2_pt']])
+        pt3 = rec2array(rec[['jet3_pt']])
+
+        eta1 = rec2array(rec[['jet1_eta']])
+        eta2 = rec2array(rec[['jet2_eta']])
+        eta3 = rec2array(rec[['jet3_eta']])
+
+        phi1 = rec2array(rec[['jet1_phi']])
+        phi2 = rec2array(rec[['jet2_phi']])
+        phi3 = rec2array(rec[['jet3_phi']])
+
+        m1 = rec2array(rec[['jet1_m']])
+        m2 = rec2array(rec[['jet2_m']])
+        m3 = rec2array(rec[['jet3_m']])
+
+        tpt1 = rec2array(rec[['mmc1_resonance_pt']])
+        teta1 = rec2array(rec[['mmc1_resonance_eta']])
+        tphi1 = rec2array(rec[['mmc1_resonance_phi']])
+        tm1 = rec2array(rec[['mmc1_resonance_m']])
+
+        numJets = rec2array(rec[['numJets']])
+
+        Opt_weight = weight_vize(d_tilde,pt1,pt2,pt3,eta1,eta2,eta3,phi1,phi2,phi3,m1,m2,m3,tpt1,teta1,tphi1,tm1,numJets,weight)
+
+        if np.isnan(np.sum(Opt_weight)):
+            print "nooooo weights returned"
+            Opt_weight=np.zeros(pt1.size)
+        return Opt_weight
+
+    def new_optiweight(self, d_tilde, rec, weight):
+        pt1 = rec2array(rec[['parton1_pt']])
+        pt2 = rec2array(rec[['parton2_pt']])
+        pt3 = rec2array(rec[['parton3_pt']])
+
+        eta1 = rec2array(rec[['parton1_eta']])
+        eta2 = rec2array(rec[['parton2_eta']])
+        eta3 = rec2array(rec[['parton3_eta']])
+
+        phi1 = rec2array(rec[['parton1_phi']])
+        phi2 = rec2array(rec[['parton2_phi']])
+        phi3 = rec2array(rec[['parton3_phi']])
+
+        tpt1 = rec2array(rec[['higgs_pt']])
+        teta1 = rec2array(rec[['higgs_eta']])
+        tphi1 = rec2array(rec[['higgs_phi']])
+        tm1 = rec2array(rec[['higgs_m']])
+
+        partin1 = rec2array(rec[['partin1_pdgId']])
+        partin2 = rec2array(rec[['partin2_pdgId']])
+        parton1 = rec2array(rec[['parton1_pdgId']])
+        parton2 = rec2array(rec[['parton2_pdgId']])
+        parton3 = rec2array(rec[['parton3_pdgId']])
+
+        x1_true = rec2array(rec[['mcevent_pdf_x1_0']])
+        x2_true = rec2array(rec[['mcevent_pdf_x2_0']])
+
+        numJets = rec2array(rec[['numJets']])
+
+        Opt_weight = new_weight_vize(d_tilde,pt1,pt2,pt3,eta1,eta2,eta3,phi1,phi2,phi3,tpt1,teta1,tphi1,tm1,partin1,partin2,parton1,parton2,parton3,numJets,weight)
+
+        if np.isnan(np.sum(Opt_weight)):
+            print "nooooo weights returned"
+            Opt_weight=np.zeros(pt1.size)
+        return Opt_weight
+
 
     def decorate(self, name=None, label=None, **hist_decor):
         if name is not None:
@@ -491,6 +606,11 @@ class Sample(object):
         if include_weight and fields is not None:
             if 'weight' not in fields:
                 fields = list(fields) + ['weight']
+            if 'o1' not in fields:
+                fields = list(fields) + ['o1']
+            if 'dphi' not in fields:
+                fields = list(fields) + ['dphi']
+
         rec = stack(recs, fields=fields)
         if clf is not None or scores is not None:
             if scores is None:
@@ -599,7 +719,7 @@ class Sample(object):
                     clf=clf,
                     systematic=systematic)
                 recs.append(rec)
-            b_rec = stack(recs, fields=all_fields + ['classifier', 'weight'])
+            b_rec = stack(recs, fields=all_fields + ['classifier', 'weight', 'o1','dphi'])
             s_rec = analysis.higgs_125.merged_records(category, region,
                 fields=all_fields, cuts=cuts,
                 include_weight=True,
@@ -1131,6 +1251,11 @@ class SystematicsSample(Sample):
         if include_weight and fields is not None:
             if 'weight' not in fields:
                 fields = list(fields) + ['weight']
+            if 'o1' not in fields:
+                fields = list(fields) + ['o1']
+            if 'dphi' not in fields:
+                fields = list(fields) + ['dphi']
+
         selection = self.cuts(category, region, systematic) & cuts
         table_selection = selection.where()
         if systematic == 'NOMINAL':
@@ -1194,6 +1319,16 @@ class SystematicsSample(Sample):
                 idx = table.get_where_list(table_selection, **kwargs)
                 idxs.append(idx)
             # add weight field
+
+            # add optimal observable
+            o1 = self.optimate(rec)
+            rec = recfunctions.rec_append_fields(
+                rec, names='o1',data=o1,dtypes='f8')
+            dphi = self.dphate(rec)
+            rec = recfunctions.rec_append_fields(
+                rec, names='dphi',data=dphi,dtypes='f8')
+
+
             if include_weight:
                 weights = np.empty(rec.shape[0], dtype='f8')
                 weights.fill(weight)
@@ -1203,8 +1338,8 @@ class SystematicsSample(Sample):
                 correction_weights = self.corrections(rec)
                 if correction_weights:
                     weights *= reduce(np.multiply, correction_weights)
-                # drop other weight fields
-                #rec = recfunctions.rec_drop_fields(rec, weight_branches)
+                if isinstance(self,Signal):
+                     weights = self.new_optiweight(0.6,rec,weights)
                 # add the combined weight
                 rec = recfunctions.rec_append_fields(rec,
                     names='weight',
