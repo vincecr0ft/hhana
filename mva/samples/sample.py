@@ -1339,7 +1339,11 @@ class SystematicsSample(Sample):
                 if correction_weights:
                     weights *= reduce(np.multiply, correction_weights)
                 if isinstance(self,Signal):
-                     weights = self.new_optiweight(0.0,rec,weights)
+                    preHawkScale = np.sum(weights)
+                    weights = self.new_optiweight(self.mixing,rec,weights)
+                    postHawkScale = np.sum(weights)
+                    sf = preHawkScale/postHawkScale
+                    weights *= sf
                 # add the combined weight
                 rec = recfunctions.rec_append_fields(rec,
                     names='weight',

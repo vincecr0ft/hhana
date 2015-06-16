@@ -319,13 +319,7 @@ def buildEvent(
         print 'mmc m too low ',higgs.M()
         return None
     else:
-        o1 = getOptimalObservable(jet1,jet2,jet3,higgs)
-    if 25 <o1 or o1 < -25:
-        print 'o1 going weird ',o1
-        print numJets,' ',higgs.Pt()
-        return o1
-    else:
-        return o1
+        return = getOptimalObservable(jet1,jet2,jet3,higgs)
 
 def buildNewEvent(
         jet1_pt,

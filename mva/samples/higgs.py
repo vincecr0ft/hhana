@@ -25,6 +25,9 @@ TAUTAUHADHADBR = 0.4197744 # = (1. - 0.3521) ** 2
 
 class Higgs(MC, Signal):
     MASSES = range(100, 155, 5)
+    MIXINGS = [-0.6,-0.5,-0.4,-0.3,
+                -0.2,-0.1, 0.0, 0.1, 0.2,
+                0.3, 0.4, 0.5, 0.6]
     MODES = ['Z', 'W', 'gg', 'VBF']
     MODES_COMBINED = [['Z', 'W'], ['gg'], ['VBF']]
     MODES_DICT = {
@@ -121,6 +124,7 @@ class Higgs(MC, Signal):
     def __init__(self, year,
                  mode=None, modes=None,
                  mass=None, masses=None,
+                 mixing=None, mixings=None,
                  sample_pattern=None, # i.e. PowhegJimmy_AUET2CT10_ggH{0:d}_tautauInclusive
                  ggf_weight=True,
                  vbf_weight=True,
@@ -141,6 +145,18 @@ class Higgs(MC, Signal):
             for mass in masses:
                 assert mass in Higgs.MASSES
             assert len(set(masses)) == len(masses)
+        if mixings is None:
+            if mixing is not None:
+                assert mixing in Higgs.MIXINGS , [mixing,Higgs.MIXINGS]
+                mixings = [mixing]
+            else:
+                # default to 125
+                mixings = [0.0]
+        else:
+            assert len(mixings) > 0
+            for mixing in mixings:
+                assert mixing in Higgs.MIXINGS
+            assert len(set(mixings)) == len(mixings)
 
         if modes is None:
             if mode is not None:
@@ -165,14 +181,14 @@ class Higgs(MC, Signal):
             str_mode = 'V'
             name += '_%s' % str_mode
 
-        str_mass = ''
-        if len(masses) == 1:
-            str_mass = '%d' % masses[0]
-            name += '_%s' % str_mass
+        str_mixings = ''
+        if len(mixings) == 1:
+            str_mixings = "%0.1f" % mixings[0]
+            name += "_%s" % str_mixings
 
         if label is None:
             label = '%s#font[52]{H}(%s)#rightarrow#tau#tau' % (
-                str_mode, str_mass)
+                str_mode, str_mixings)
 
         if year == 2011:
             if suffix is None:
@@ -184,9 +200,10 @@ class Higgs(MC, Signal):
             generator_index = 2
         else:
             raise ValueError('No Higgs defined for year %d' % year)
-
+        #####################
         self.samples = []
         self.masses = []
+        self.mixings = []
         self.modes = []
 
         if sample_pattern is not None:
@@ -200,9 +217,11 @@ class Higgs(MC, Signal):
                 generator = Higgs.MODES_DICT[mode][generator_index]
                 for mass in masses:
                     self.samples.append('%s%sH%d_tautauhh%s' % (
-                        generator, mode, mass, suffix))
+                            generator, mode, mass, suffix))
                     self.masses.append(mass)
                     self.modes.append(mode)
+        for mixing in mixings:
+            self.mixings.append(mixing)
 
         if len(self.modes) == 1:
             self.mode = self.modes[0]
@@ -212,6 +231,12 @@ class Higgs(MC, Signal):
             self.mass = self.masses[0]
         else:
             self.mass = None
+        if len(self.mixings) == 1:
+            self.mixing = self.mixings[0]
+        else:
+            self.mixing = None
+
+        #####################
 
         self.ggf_weight = ggf_weight
         self.ggf_weight_field = 'ggf_weight'

@@ -98,9 +98,9 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
         unblind=args.unblind,  # or is_control,
         cuts=cuts,
         show_ratio=args.show_ratio,
-        signal_on_top=True,
+        signal_on_top=False,
         clf=clf,
-        min_score=0.567454611796,#-0.0889747504412,
+        min_score=0.815967620756,#0.567454611796,#-0.0889747504412,
         no_data=args.no_data,
         #top_label="Fakes Model: {0}".format(analysis.fakes_region),
         )

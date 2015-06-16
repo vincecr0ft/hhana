@@ -39,11 +39,17 @@ def get_analysis(args, **kwargs):
         year = kwargs.pop('year')
     else:
         year = args.year
+    if 'mixings' in kwargs:
+        mixings = kwargs.pop('mixings')
+    else:
+        mixings = args.mixings
+
     for name, value in kwargs.items():
         if hasattr(args, name):
             setattr(args, name, value)
         else:
             raise ValueError("invalid Analysis kwarg {0}".format(name))
+
     analysis = Analysis(
         year=year,
         systematics=args.systematics,
@@ -54,7 +60,7 @@ def get_analysis(args, **kwargs):
         constrain_norms=args.constrain_norms,
         qcd_shape_systematic=args.qcd_shape_systematic,
         random_mu=args.random_mu,
-        mu=args.mu,
+        mu=args.mu, mixings=args.mixings,
         ggf_weight=args.ggf_weight,
         suffix=args.suffix)
     return analysis
@@ -74,7 +80,7 @@ class Analysis(object):
                  constrain_norms=False,
                  qcd_shape_systematic=True,
                  random_mu=False,
-                 mu=1.,
+                 mu=1., mixings=0.0,
                  ggf_weight=True,
                  suffix=None,
                  norm_field=NORM_FIELD):
@@ -85,6 +91,10 @@ class Analysis(object):
         self.fakes_region = fakes_region
         self.suffix = suffix
         self.norm_field = norm_field
+        self.mixings = mixings
+        print 'mixings!!!',mixings
+        for m in mixings:
+            print m," mixing baby"
 
         if use_embedding:
             log.info("Using embedded Ztautau")
@@ -151,27 +161,41 @@ class Analysis(object):
         ]
 
         self.ggf_weight = ggf_weight
-        self.signals = self.get_signals(125)
+        self.signals = self.get_signals(mass=125,mixing=mixings)
 
-    def get_signals(self, mass=125, mode=None, scale_125=False):
+    def get_signals(self, mass=125, mixing=0.0, mode=None, scale_125=False):
         signals = []
         if not isinstance(mass, list):
             mass = [mass]
+        if not isinstance(mixing, list):
+            print 'not a mixing list'
+            mixing = [mixing]
         if scale_125:
             events_125 = self.higgs_125.events()[1].value
         if mode == 'combined':
-            for m in mass:
+            for m in mixing:
+                if m<-0.3:
+                    col = 'red'
+                elif m<0:
+                    col = 'pink'
+                elif m>0.3:
+                    col= 'blue'
+                elif m>0.0:
+                    col= 'purple'
+                else:
+                    col='black'
                 s = samples.Higgs(
                     year=self.year,
-                    mass=m,
+                    mass=125,
+                    mixing=m,
                     systematics=self.systematics,
                     scale=self.mu,
-                    linecolor='red',
+                    linecolor=col,
                     linewidth=2,
                     linestyle='solid',
                     ggf_weight=self.ggf_weight)
-                if m != 125 and scale_125:
-                    log.warning("SCALING SIGNAL TO 125")
+                if m != 0.0 and scale_125:
+                    log.warning("SCALING SIGNAL TO 0.0")
                     log.info(str(s.mass))
                     sf = events_125 / s.events()[1].value
                     log.info(str(sf))
@@ -179,37 +203,40 @@ class Analysis(object):
                 signals.append(s)
             return signals
         elif mode == 'workspace':
-            for m in mass:
-                if m != 125 and scale_125:
+            for m in mixing:
+                if m != 0.0 and scale_125:
                     curr_events = samples.Higgs(
                         year=self.year,
-                        mass=m,
+                        mass=125,
+                        mixing=m,
                         systematics=False,
                         scale=self.mu,
                         ggf_weight=self.ggf_weight).events()[1].value
-                    log.warning("SCALING SIGNAL TO 125")
+                    log.warning("SCALING SIGNAL TO 0.0")
                     sf = events_125 / curr_events
                     log.info(str(sf))
                 for mode in samples.Higgs.MODES:
                     s = samples.Higgs(
                         year=self.year,
                         mode=mode,
-                        mass=m,
+                        mass=125,
+                        mixing=m,
                         systematics=self.systematics,
                         scale=self.mu,
                         ggf_weight=self.ggf_weight)
-                    if m != 125 and scale_125:
-                        log.warning("SCALING SIGNAL TO 125")
+                    if m != 0.0 and scale_125:
+                        log.warning("SCALING SIGNAL TO 0.0")
                         log.info(str(s.mass))
                         s.scale *= sf
                     signals.append(s)
         elif mode is None:
-            for m in mass:
+            for m in mixing:
                 for modes in samples.Higgs.MODES_COMBINED:
                     signals.append(samples.Higgs(
                         year=self.year,
                         modes=modes,
-                        mass=m,
+                        mass=125,
+                        mixing=m,
                         systematics=self.systematics,
                         scale=self.mu,
                         ggf_weight=self.ggf_weight))
@@ -218,16 +245,18 @@ class Analysis(object):
                 for _mode in mode:
                     signals.append(samples.Higgs(
                         year=self.year,
-                        mass=_mass,
+                        mass=_125,
+                        mixing=m,
                         mode=_mode,
                         systematics=self.systematics,
                         scale=self.mu,
                         ggf_weight=self.ggf_weight))
         else:
-            for m in mass:
+            for m in mixing:
                 signals.append(samples.Higgs(
                     year=self.year,
-                    mass=m,
+                    mass=125,
+                    mixing=m,
                     mode=mode,
                     systematics=self.systematics,
                     scale=self.mu,
@@ -301,7 +330,7 @@ class Analysis(object):
             else:
                 suffix = '_%d' % mass
             channel_name += suffix
-            samples += self.get_signals(mass, mode)
+            samples += self.get_signals(mass, self.mixings, mode)
 
         # create HistFactory samples
         histfactory_samples = []
@@ -373,7 +402,7 @@ class Analysis(object):
             else:
                 suffix = '_%d' % mass
             channel_name += suffix
-            samples += self.get_signals(mass, mode, scale_125=scale_125)
+            samples += self.get_signals(mass,self.mixings, mode, scale_125=scale_125)
 
         # create HistFactory samples
         histfactory_samples = []
@@ -490,7 +519,7 @@ class Analysis(object):
         if masses is not None:
             for mass in masses:
                 # signal scores
-                sigs = self.get_signals(mass=mass, mode=mode)
+                sigs = self.get_signals(mass=mass, mixing=self.mixings, mode=mode)
                 sig_scores = []
                 for sig in sigs:
                     scores_dict = sig.scores(

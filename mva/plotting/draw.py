@@ -126,7 +126,7 @@ def draw(name,
          signal_colors=None,
          show_signal_error=False,
          fill_signal=False,
-         stack_signal=True,
+         stack_signal=False,
          units=None,
          plot_label=None,
          ylabel='Events',
@@ -149,7 +149,7 @@ def draw(name,
          output_name=None,
          output_dir=PLOTS_DIR,
          arrow_values=None,
-         overflow=True,
+         overflow=False,
          show_pvalue=False,
          top_label=None,
          poisson_errors=True):
@@ -244,9 +244,26 @@ def draw(name,
             hist.drawstyle = 'hist'
             model_stack.Add(hist)
         if signal is not None and signal_on_top:
-            for s in scaled_signal:
-                model_stack.Add(s)
+            if stack_signal:
+                for s in scaled_signal:
+                    model_stack.Add(s)                
         objects.append(model_stack)
+
+    if model is not None:
+        if model_colors is not None:
+            set_colors(model, model_colors)
+        model_stack = HistStack()
+        for hist in model:
+            hist.SetLineWidth(0)
+            hist.drawstyle = 'hist'
+            model_stack.Add(hist)
+        if signal is not None and signal_on_top:
+            if not stack_signal:
+                for s in scaled_signal:
+                    this_stack=model_stack
+                    this_stack.Add(s)                
+                    objects.extend(this_stack)
+
 
     if signal is not None and not signal_on_top:
         if stack_signal:
