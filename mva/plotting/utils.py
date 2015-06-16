@@ -124,21 +124,21 @@ def legend_params(position, textsize):
         print "UPPER LEFT"
         return dict(
             leftmargin=0.05,
-            rightmargin=0.5)
-            #topmargin=0.05,
+            rightmargin=0.5,
+            topmargin=0.05,
             # margin=0.25,
-            #entrysep=2,
-            #entryheight=textsize + 4,
-            #textsize=textsize)
+            entrysep=0.01,
+            #entryheight=textsize + 0.04,
+            textsize=textsize*0.8)
     elif location == 'upper right':
         print "UPPER RIGHT"
         return dict(
             leftmargin=0.05,
-            rightmargin=0.5)
-            #topmargin=0.05,
+            rightmargin=0.5,
+            topmargin=0.05,
             # margin=0.25,
-            # entrysep=2,
-            # entryheight=textsize + 4,
-            #textsize=textsize)
+            entrysep=0.01,
+            #entryheight=textsize + 0.4,
+            textsize=textsize*0.8)
     else:
         raise RuntimeError('wrong position argument -- legend_params should be updated')

@@ -23,7 +23,7 @@ export PYTHONPATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PYTHONPATH:+:$PYTHONPATH}
 export PATH=/afs/cern.ch/user/v/vcroft/htautau/local/bin:$PATH
 export LD_LIBRARY_PATH=/afs/cern.ch/user/v/vcroft/htautau/local/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=/afs/cern.ch/user/v/vcroft/htautau/local/lib/python2.7/site-packages:$PYTHONPATH
-Iexport PATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PATH:+:$PATH}
+export PATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PATH:+:$PATH}
 
 if [ -f ${DIR_HIGGSTAUTAU_MVA_SETUP}/../hhntup/setup.sh ]
 then

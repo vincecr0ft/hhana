@@ -1,4 +1,3 @@
-
 # Imports
 from ROOT import *
 import numpy as np
@@ -16,11 +15,11 @@ else:
 
 #----------------------
 def sortJets(jet1,jet2,jet3):
-    if jet1.Pt()<10.:
+    if jet1.Pt()<10e-7:
         jet1=TLorentzVector(0,0,0,0)
-    if jet2.Pt()<10.:
+    if jet2.Pt()<10e-7:
         jet2=TLorentzVector(0,0,0,0)
-    if jet3.Pt()<10.:
+    if jet3.Pt()<10e-7:
         jet3=TLorentzVector(0,0,0,0)
     if jet1.Pt()>jet2.Pt():
         lead=jet1
@@ -40,11 +39,11 @@ def sortJets(jet1,jet2,jet3):
     return (lead,sublead,third)
 
 def sortPartons(jet1,jet2,jet3,f1,f2,f3):
-    if jet1.Pt()<10.:
+    if jet1.Pt()<10e-7:
         jet1=TLorentzVector(0,0,0,0)
-    if jet2.Pt()<10.:
+    if jet2.Pt()<10e-7:
         jet2=TLorentzVector(0,0,0,0)
-    if jet3.Pt()<10.:
+    if jet3.Pt()<10e-7:
         jet3=TLorentzVector(0,0,0,0)
     if f3 > 9 or f3 == None or f3 == 0.:
         if f3==21: 
@@ -93,7 +92,6 @@ def sortPartons(jet1,jet2,jet3,f1,f2,f3):
         else:
             third=[jet3,f3]
     return (lead,sublead,third)
-
 
 def getX1(ecm,jet1,jet2,jet3,higgs):
     vec=jet1+jet2+jet3+higgs
@@ -152,7 +150,7 @@ def getNewOptimalObservable(jet1,jet2,jet3,higgs):
     phiggs = np.array([higgs.E(),higgs.Px(),higgs.Py(),higgs.Pz()])
 
 
-    if third == None or third.Pt()<10.:
+    if third == None or third.Pt()<10e-7:
         outCount = 2
     else:
         outCount = 3
@@ -177,7 +175,7 @@ def getNewOptimalObservable(jet1,jet2,jet3,higgs):
 
 def getDeltaPhi(jet1,jet2,jet3):
     lead, sublead, third = sortJets(jet1,jet2,jet3)
-    if lead.Pt()<10. or sublead.Pt()<10. :return None
+    if lead.Pt()<10e-7 or sublead.Pt()<10e-7 :return None
 
     if lead.Pz() > 0. and sublead.Pz() > 0.:
         dphi = None
@@ -215,9 +213,10 @@ def getOptimalWeight(d_tilde,jet1,jet2,jet3,higgs):
 def getNewOptimalWeight(d_tilde,jet1,jet2,jet3,higgs,
                         partin1_f,partin2_f,
                         parton1_f,parton2_f,parton3_f):
+
     lead,sublead,third=sortPartons(jet1,jet2,jet3,parton1_f,parton2_f,parton3_f)
 
-    if lead[0].Pt() < 10. or sublead[0].Pt() < 10. or higgs.M() <10.: 
+    if lead[0].Pt() < 10e-7 or sublead[0].Pt() < 10e-7 or higgs.M() <10e-7: 
         print 'no lead sublead or higgs'
         print lead[0].Pt(),' ',sublead[0].Pt(),' ',higgs.M()
         return None
@@ -226,7 +225,7 @@ def getNewOptimalWeight(d_tilde,jet1,jet2,jet3,higgs,
     pjet2 = np.array([sublead[0].E(),sublead[0].Px(),sublead[0].Py(),sublead[0].Pz()])
     phiggs = np.array([higgs.E(),higgs.Px(),higgs.Py(),higgs.Pz()])
 
-    if third[0].Pt()<10.:
+    if third[0].Pt()<10e-7:
         pjet3 = np.array([0,0,0,0])
         outCount = 2
         third=[TLorentzVector(0,0,0,0),0]
@@ -241,6 +240,11 @@ def getNewOptimalWeight(d_tilde,jet1,jet2,jet3,higgs,
         return None
     if third[1] == None:
         third[1] = 0.
+
+    if partin1_f==21:
+        partin1_f=0
+    if partin2_f==21:
+        partin2_f=0
     ModelSwitch = 1 # 0 for pure CP-odd, 1 for CP-mixed
     rsmin = 1
     din = 0
@@ -259,8 +263,19 @@ def getNewOptimalWeight(d_tilde,jet1,jet2,jet3,higgs,
         print 'partin1 f %f, partin2 %f'%(partin1_f,partin2_f)
         print 'lead[1] %f,sublead[1] %f,third[1] %f,'%(lead[1],sublead[1],third[1])
         print 'x1 %f, x2 %f, pjet1 %f, pjet2 %f, pjet3 %f, phiggs %f'%(x1,x2,pjet1[0],pjet2[0],pjet3[0],phiggs[0])
-    print 'hawkweight of ',weight
+#    print 'hawkweight of ',weight
+    if weight<0.:
+        print 'negative weight'
+        print 'ecm %f,ModelSwitch %f,rsmin %f,din%f ,dbin %f,d_tilde %f'%(ecm,ModelSwitch,rsmin,din,dbin,d_tilde)
+        print 'lamda %f, outCount %f'%(lambdahvvin,outCount)
+        print 'partin1 f %f, partin2 %f'%(partin1_f,partin2_f)
+        print 'lead[1] %f,sublead[1] %f,third[1] %f,'%(lead[1],sublead[1],third[1])
+        print 'x1 %f, x2 %f, pjet1 %f, pjet2 %f, pjet3 %f, phiggs %f'%(x1,x2,pjet1[0],pjet2[0],pjet3[0],phiggs[0])
     if not math.isnan(weight):
+#        print 'incoming 1 f %f, incoming 2 %f'%(partin1_f,partin2_f)
+#        print 'lead flav %f,sublead flav %f,third flav %f,'%(lead[1],sublead[1],third[1])
+
+
         return weight
     else:
         print 'nanananananananana nan weight'
@@ -293,14 +308,14 @@ def buildEvent(
     higgs.SetPtEtaPhiM(tau1_pt,tau1_eta,tau1_phi,tau1_m)
     
     nJets=0
-    if jet1.Pt()>10.:nJets+=1
-    if jet2.Pt()>10.:nJets+=1
-    if jet3.Pt()>10.:nJets+=1
+    if jet1.Pt()>10e-7:nJets+=1
+    if jet2.Pt()>10e-7:nJets+=1
+    if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
         print 'not enough jets ',numJets,' ',nJets
         return None
-    elif higgs.M()<10.:
+    elif higgs.M()<10e-7:
         print 'mmc m too low ',higgs.M()
         return None
     else:
@@ -338,14 +353,14 @@ def buildNewEvent(
     higgs.SetPtEtaPhiM(tau1_pt,tau1_eta,tau1_phi,tau1_m)
     
     nJets=0
-    if jet1.Pt()>10.:nJets+=1
-    if jet2.Pt()>10.:nJets+=1
-    if jet3.Pt()>10.:nJets+=1
+    if jet1.Pt()>10e-7:nJets+=1
+    if jet2.Pt()>10e-7:nJets+=1
+    if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
         print 'not enough jets ',numJets,' ',nJets
         return None
-    elif higgs.M()<10.:
+    elif higgs.M()<10e-7:
         print 'mmc m too low ',higgs.M()
         return None
     else:
@@ -377,9 +392,9 @@ def buildPhiEvent(
     jet2.SetPtEtaPhiM(jet2_pt*0.001,jet2_eta,jet2_phi,0.)
     jet3.SetPtEtaPhiM(jet3_pt*0.001,jet3_eta,jet3_phi,0.)
     nJets=0
-    if jet1.Pt()>10.:nJets+=1
-    if jet2.Pt()>10.:nJets+=1
-    if jet3.Pt()>10.:nJets+=1
+    if jet1.Pt()>10e-7:nJets+=1
+    if jet2.Pt()>10e-7:nJets+=1
+    if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
         print 'not enough jets ',numJets,' ',nJets
@@ -418,7 +433,7 @@ def buildEventWeight(d_tilde,
     higgs.SetPtEtaPhiM(tau1_pt,tau1_eta,tau1_phi,tau1_m)
 
 
-    if numJets<2 or higgs.M()<10.: 
+    if numJets<2 or higgs.M()<10e-7: 
         print 'not enough jets or higgles'
         return weight
     else:
@@ -453,7 +468,7 @@ def buildNewEventWeight(d_tilde,
         parton3_f,
         numJets,
         weight):
-    if tau1_m < 10.:
+    if tau1_m < 10e-7:
         return weight
 
     jet1=TLorentzVector(0.,0.,0.,0.)
@@ -466,9 +481,9 @@ def buildNewEventWeight(d_tilde,
     higgs.SetPtEtaPhiM(tau1_pt*0.001,tau1_eta,tau1_phi,tau1_m*0.001)
 
     nJets=0
-    if jet1.Pt()>10.:nJets+=1
-    if jet2.Pt()>10.:nJets+=1
-    if jet3.Pt()>10.:nJets+=1
+    if jet1.Pt()>10e-7:nJets+=1
+    if jet2.Pt()>10e-7:nJets+=1
+    if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
         return weight
@@ -489,8 +504,10 @@ def buildNewEventWeight(d_tilde,
     elif math.isnan(hawkweight):
         print "nan weight ",hawkweight
         return weight
+    elif hawkweight < 0.:
+        print "negative weight!"
+        return weight
     else:
-        print 'returning a weight of ',hawkweight
         return weight*hawkweight
 
 
