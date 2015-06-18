@@ -30,6 +30,7 @@ class Higgs(MC, Signal):
                 0.3, 0.4, 0.5, 0.6]
     MODES = ['Z', 'W', 'gg', 'VBF']
     MODES_COMBINED = [['Z', 'W'], ['gg'], ['VBF']]
+    MODES_CP = [['Z', 'W', 'gg'], ['VBF']]
     MODES_DICT = {
         'gg': ('ggf', 'PowPyth_', 'PowPyth8_AU2CT10_'),
         'VBF': ('vbf', 'PowPyth_', 'PowPyth8_AU2CT10_'),
@@ -160,7 +161,7 @@ class Higgs(MC, Signal):
 
         if modes is None:
             if mode is not None:
-                assert mode in Higgs.MODES
+                assert mode in Higgs.MODES, mode
                 modes = [mode]
             else:
                 # default to all modes
@@ -180,6 +181,10 @@ class Higgs(MC, Signal):
         elif len(modes) == 2 and set(modes) == set(['W', 'Z']):
             str_mode = 'V'
             name += '_%s' % str_mode
+        elif len(modes) == 2 and set(modes) == set(['gg', 'Z', 'W']):
+            str_mode = 'nonVBF'
+            name += '_%s' % str_mode
+
 
         str_mixings = ''
         if len(mixings) == 1:

@@ -249,22 +249,6 @@ def draw(name,
                     model_stack.Add(s)                
         objects.append(model_stack)
 
-    if model is not None:
-        if model_colors is not None:
-            set_colors(model, model_colors)
-        model_stack = HistStack()
-        for hist in model:
-            hist.SetLineWidth(0)
-            hist.drawstyle = 'hist'
-            model_stack.Add(hist)
-        if signal is not None and signal_on_top:
-            if not stack_signal:
-                for s in scaled_signal:
-                    this_stack=model_stack
-                    this_stack.Add(s)                
-                    objects.extend(this_stack)
-
-
     if signal is not None and not signal_on_top:
         if stack_signal:
             # create the signal stack

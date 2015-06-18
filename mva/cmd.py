@@ -48,7 +48,7 @@ def general_parser(parser=None, multi_years=False, multi_categories=False):
     parser.add_argument('--unblind', action='store_true', default=False,
             help='plot the data in the signal region of the classifier output')
     parser.add_argument('--masses', default='125')
-    parser.add_argument('--mixings', type=float, nargs="+", default=None)
+    parser.add_argument('--mixings', type=float, nargs="+", default=[0.0])
     parser.add_argument('--suffix', default=None, nargs='?',
             help='suffix to add to any output files or plots')
     parser.add_argument('--output-suffix', default=None, nargs='?',

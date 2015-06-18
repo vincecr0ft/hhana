@@ -1,0 +1,207 @@
+#!/usr/bin/env python
+"""
+Create variable plots
+"""
+from mva.cmd import get_parser
+
+args = get_parser(actions=False).parse_args()
+year = args.year
+
+# rootpy imports
+from rootpy.io import root_open
+from rootpy.tree import Cut
+from rootpy.plotting import Hist, Canvas, Legend, Graph
+import rootpy.plotting.utils as rootpy_utils
+from rootpy.plotting.style.atlas import ATLAS_label
+
+
+# local imports
+from mva.plotting import draw_channel, draw_channel_array, uncertainty_band, hist_scores, draw_ratio
+from mva.systematics import get_systematics, parse_systematics
+from mva.categories import CATEGORIES
+from mva.massregions import MassRegions
+from mva.variables import OBSERVABLES, VARIABLES, YEAR_VARIABLES, get_label
+from mva.defaults import TARGET_REGION
+from mva.analysis import get_analysis
+from mva import log, plot_dir
+
+import ROOT
+
+def plot_o1(vbf, ggf, ztt, category):
+    _, _, _, ymax = rootpy_utils.get_limits([ztt, vbf, ggf], ypadding=(0.3, 0)) 
+    plot = Canvas()
+    ztt.Draw()
+    ztt.yaxis.title = 'Fraction of Events / 5 GeV'
+    ztt.xaxis.title = 'Obtimal Observable 1 (O1)' 
+    ztt.yaxis.SetLimits(0, ymax)
+    ztt.yaxis.SetRangeUser(0, ymax)
+    ztt.xaxis.SetNdivisions(507, True)
+    vbf.Draw('same')
+    ggf.Draw('same')
+    leg_o1 = Legend(2, pad=plot,
+                     entryheight=0.08,
+                     margin=0.2,
+                     textsize=22,
+                     entrysep=0.01)
+    leg_o1.AddEntry(ztt, style='L')
+    leg_o1.AddEntry(ggf, style='L')
+    leg_o1.AddEntry(vbf, style='L')
+    leg_o1.SetHeader('ObtObs')
+    leg_o1.Draw()
+    if args.year == 2011:
+        sqrts = 7
+    elif args.year == 2012:
+        sqrts = 8
+    else:
+        sqrts= None
+
+    ATLAS_label(plot.GetLeftMargin()+0.03, 0.89,
+                sep=0.14, pad=plot, sqrts=sqrts,
+                text="Internal", textsize=22)
+    label = ROOT.TLatex( plot.GetLeftMargin() + 0.03, 0.83,
+                         category.label )
+    label.SetNDC()
+    label.SetTextFont(43)
+    label.SetTextSize(22)
+    label.Draw()
+    for fmt in args.output_formats:
+        plot.SaveAs('plots/lowBDTO1_%s%s.%s' % (category.name, output_suffix, fmt))
+
+
+
+
+SYSTEMATICS = get_systematics(year)
+args.systematics_components = parse_systematics(args.systematics_components)
+
+mass_regions = MassRegions(
+    low=args.low_mass_cut,
+    high=args.high_mass_cut,
+    high_sideband_in_control=args.high_sideband_in_control,
+    mass_window_signal_region=False,
+    #args.no_mmc,
+    # not enough events to only train in signal region
+    train_signal_region=False)
+
+control_region = mass_regions.control_region
+signal_region = mass_regions.signal_region
+#signal_region = control_region # for creating control workspaces
+train_region = mass_regions.train_region
+
+categories = CATEGORIES[args.categories]
+category_names = args.category_names
+target_region = args.target_region
+
+analysis = get_analysis(args , systematics = False)
+
+output_suffix = analysis.get_suffix()
+
+cat_defs = [args.categories]
+if args.categories != 'presel':
+    cat_defs.append(args.controls)
+
+for category in analysis.iter_categories(*cat_defs, names=args.category_names):
+    if not category.name == 'vbf':
+        continue
+    else: print 'category is vbf'
+
+    is_control = category.analysis_control
+
+    cuts = Cut(args.plot_cut)
+
+    if args.plot_expr is not None:
+        VARS = {
+            tuple(args.plot_expr.split(',')): {
+                'title': args.plot_name,
+                'range': (args.plot_min, args.plot_max),
+                'bins': args.plot_bins,
+                'filename': 'expr_' + args.plot_name.replace(' ', '_')}}
+    else:
+        VARS = OBSERVABLES # formerly VARIABLES
+        VARS.update(YEAR_VARIABLES[args.year])
+
+    clf = None
+    if not is_control:
+        clf = analysis.get_clf(category, load=True, transform=True)
+    binning=clf.binning(analysis.year, overflow=1E5)
+    for bin in binning: print bin
+
+    if is_control:
+        continue
+
+### urgh I took out the latest attempt from here ###
+
+
+with root_open('o1_hadhad_histos.root', 'recreate') as out:
+    template = Hist(40, -30, 30, linewidth=3, drawstyle='hist')
+    for category in categories:
+        vbf = template.Clone(name="truevbf_%s" % category.name, title=analysis.vbf_00.label, linecolor='blue',linestyle='dashed')
+        ggf = template.Clone(name="trueggf_%s" % category.name, title=analysis.ggf_00.label, linecolor='red', linestyle='dashed' )
+        ztt = template.Clone(name="ztt_%s" % category.name, title=analysis.ztautau.label)
+
+        analysis.ztautau.draw('o1', ztt, category, TARGET_REGION)
+        analysis.vbf_00.draw('o1', vbf, category, TARGET_REGION)
+        analysis.ggf_00.draw('o1', ggf, category, TARGET_REGION)
+
+        # normalize                                                                                      
+#        ztt_mmc /= ztt_mmc.integral()
+        vbf /= vbf.integral()
+        ggf /= ggf.integral()
+        ztt /= ztt.integral()
+
+
+        # plot the mass distributions                                                                    
+        plot_o1(vbf, ggf, ztt, category)
+
+        vbf.Write()
+        ggf.Write()
+        ztt.Write()
+
+"""
+    draw_channel(channel,
+        category=category,
+        plot_label='Sideband CR',
+        data_info=str(analysis.data.info),
+        output_name='event_bdt_score_control' + suffix,
+        name='BDT score',
+        systematics=systematics,
+        output_formats=args.output_formats,
+        ypadding=(0.4, 0.),
+        log_ypadding=(0.5, 0.1),
+        #range=(-1, 1),                                                                                               
+        signal_scale=signal_scale,
+        signal_on_top=False,
+        show_ratio=True,
+        output_dir=plot_dir('bdt'))
+"""
+
+
+"""
+    figs = draw_channel_array(
+        analysis,
+        vars=VARS,
+        mass=125,
+        mode='combined',
+        signal_scale=(
+            50 if is_control or 'preselection' in category.name else 1),
+        plot_label=(
+            'Signal Region' if not is_control and
+            not ('preselection' in category.name) else None),
+        category=category,
+        region=target_region,
+        #systematics_components=args.systematics_components,
+        output_formats=args.output_formats,
+        weighted=not args.no_weight,
+        plots=args.plots,
+        output_suffix=output_suffix,
+        unblind=args.unblind,  # or is_control,
+        cuts=cuts,
+        show_ratio=args.show_ratio,
+        signal_on_top=True,
+        clf=clf,
+        max_score=0.567454611796,#-0.0889747504412,
+        #min_score=0.815967620756,#0.567454611796,#-0.0889747504412,
+        no_data=args.no_data,
+        #top_label="Fakes Model: {0}".format(analysis.fakes_region),
+        )
+
+"""

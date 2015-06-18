@@ -313,13 +313,12 @@ def buildEvent(
     if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
-        print 'not enough jets ',numJets,' ',nJets
         return None
     elif higgs.M()<10e-7:
         print 'mmc m too low ',higgs.M()
         return None
     else:
-        return = getOptimalObservable(jet1,jet2,jet3,higgs)
+        return getOptimalObservable(jet1,jet2,jet3,higgs)
 
 def buildNewEvent(
         jet1_pt,
@@ -352,19 +351,12 @@ def buildNewEvent(
     if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
-        print 'not enough jets ',numJets,' ',nJets
         return None
     elif higgs.M()<10e-7:
         print 'mmc m too low ',higgs.M()
         return None
     else:
-        o1 = getNewOptimalObservable(jet1,jet2,jet3,higgs)
-    if 25 <o1 or o1 < -25:
-        print 'o1 going weird ',o1
-        print numJets,' ',higgs.Pt()
-        return o1
-    else:
-        return o1
+        return getNewOptimalObservable(jet1,jet2,jet3,higgs)
 
 
 def buildPhiEvent(
@@ -391,7 +383,6 @@ def buildPhiEvent(
     if jet3.Pt()>10e-7:nJets+=1
 
     if numJets<2 or nJets<2:
-        print 'not enough jets ',numJets,' ',nJets
         return None
     else:
         dphi = getDeltaPhi(jet1,jet2,jet3)
@@ -428,7 +419,6 @@ def buildEventWeight(d_tilde,
 
 
     if numJets<2 or higgs.M()<10e-7: 
-        print 'not enough jets or higgles'
         return weight
     else:
         try: hawkweight = getOptimalWeight(d_tilde,jet1,jet2,jet3,higgs)

@@ -39,10 +39,6 @@ def get_analysis(args, **kwargs):
         year = kwargs.pop('year')
     else:
         year = args.year
-    if 'mixings' in kwargs:
-        mixings = kwargs.pop('mixings')
-    else:
-        mixings = args.mixings
 
     for name, value in kwargs.items():
         if hasattr(args, name):
@@ -139,6 +135,31 @@ class Analysis(object):
             scale=self.mu,
             ggf_weight=ggf_weight)
 
+        self.vbf_00 = samples.Higgs(
+            year=year,
+            mass=125,
+            mixing=0.0,
+            mode='VBF',
+            systematics=systematics,
+            linecolor='red',
+            linewidth=2,
+            linestyle='dashed',
+            scale=self.mu,
+            ggf_weight=ggf_weight)
+
+        self.ggf_00 = samples.Higgs(
+            year=year,
+            mass=125,
+            mixing=0.0,
+            mode='gg',
+            systematics=systematics,
+            linecolor='red',
+            linewidth=2,
+            linestyle='dashed',
+            scale=self.mu,
+            ggf_weight=ggf_weight)
+
+
         # QCD shape region SS or !OS
         self.qcd = samples.QCD(
             data=self.data,
@@ -161,7 +182,7 @@ class Analysis(object):
         ]
 
         self.ggf_weight = ggf_weight
-        self.signals = self.get_signals(mass=125,mixing=mixings)
+        self.signals = self.get_signals(mass=125,mixing=mixings, mode='CP')
 
     def get_signals(self, mass=125, mixing=0.0, mode=None, scale_125=False):
         signals = []
@@ -172,7 +193,18 @@ class Analysis(object):
             mixing = [mixing]
         if scale_125:
             events_125 = self.higgs_125.events()[1].value
-        if mode == 'combined':
+        if mode == 'CP':
+            sother1  = samples.Higgs(
+                year=self.year,
+                mass=125,
+                modes=['gg','Z','W'],
+                systematics=self.systematics,
+                scale=self.mu,
+                linecolor='black',
+                linewidth=2,
+                linestyle='dashed',
+                ggf_weight=self.ggf_weight)
+            signals.append(sother1)
             for m in mixing:
                 if m<-0.3:
                     col = 'red'
@@ -184,6 +216,27 @@ class Analysis(object):
                     col= 'purple'
                 else:
                     col='black'
+                s = samples.Higgs(
+                    year=self.year,
+                    mass=125,
+                    mixing=m,
+                    mode='VBF',
+                    systematics=self.systematics,
+                    scale=self.mu,
+                    linecolor=col,
+                    linewidth=2,
+                    linestyle='solid',
+                    ggf_weight=self.ggf_weight)
+                if m != 0.0 and scale_125:
+                    log.warning("SCALING SIGNAL TO 0.0")
+                    log.info(str(s.mass))
+                    sf = events_125 / s.events()[1].value
+                    log.info(str(sf))
+                    s.scale *= sf
+                signals.append(s)            
+            return signals
+        if mode == 'combined':
+            for m in mixing:
                 s = samples.Higgs(
                     year=self.year,
                     mass=125,
