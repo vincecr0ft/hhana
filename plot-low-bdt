@@ -128,54 +128,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     if is_control:
         continue
 
-### urgh I took out the latest attempt from here ###
-
-
-with root_open('o1_hadhad_histos.root', 'recreate') as out:
-    template = Hist(40, -30, 30, linewidth=3, drawstyle='hist')
-    for category in categories:
-        vbf = template.Clone(name="truevbf_%s" % category.name, title=analysis.vbf_00.label, linecolor='blue',linestyle='dashed')
-        ggf = template.Clone(name="trueggf_%s" % category.name, title=analysis.ggf_00.label, linecolor='red', linestyle='dashed' )
-        ztt = template.Clone(name="ztt_%s" % category.name, title=analysis.ztautau.label)
-
-        analysis.ztautau.draw('o1', ztt, category, TARGET_REGION)
-        analysis.vbf_00.draw('o1', vbf, category, TARGET_REGION)
-        analysis.ggf_00.draw('o1', ggf, category, TARGET_REGION)
-
-        # normalize                                                                                      
-#        ztt_mmc /= ztt_mmc.integral()
-        vbf /= vbf.integral()
-        ggf /= ggf.integral()
-        ztt /= ztt.integral()
-
-
-        # plot the mass distributions                                                                    
-        plot_o1(vbf, ggf, ztt, category)
-
-        vbf.Write()
-        ggf.Write()
-        ztt.Write()
-
-"""
-    draw_channel(channel,
-        category=category,
-        plot_label='Sideband CR',
-        data_info=str(analysis.data.info),
-        output_name='event_bdt_score_control' + suffix,
-        name='BDT score',
-        systematics=systematics,
-        output_formats=args.output_formats,
-        ypadding=(0.4, 0.),
-        log_ypadding=(0.5, 0.1),
-        #range=(-1, 1),                                                                                               
-        signal_scale=signal_scale,
-        signal_on_top=False,
-        show_ratio=True,
-        output_dir=plot_dir('bdt'))
-"""
-
-
-"""
+    ### draw whole channel in low BDT region 
     figs = draw_channel_array(
         analysis,
         vars=VARS,
@@ -204,4 +157,47 @@ with root_open('o1_hadhad_histos.root', 'recreate') as out:
         #top_label="Fakes Model: {0}".format(analysis.fakes_region),
         )
 
+### draw whole optobs comparison 
+with root_open('o1_hadhad_histos.root', 'recreate') as out:
+    template = Hist(40, -30, 30, linewidth=3, drawstyle='hist')
+    for category in categories:
+        vbf = template.Clone(name="truevbf_%s" % category.name, title=analysis.vbf_00.label, linecolor='blue',linestyle='dashed')
+        ggf = template.Clone(name="trueggf_%s" % category.name, title=analysis.ggf_00.label, linecolor='red', linestyle='dashed' )
+        ztt = template.Clone(name="ztt_%s" % category.name, title=analysis.ztautau.label)
+
+        analysis.ztautau.draw('o1', ztt, category, TARGET_REGION)
+        analysis.vbf_00.draw('o1', vbf, category, TARGET_REGION)
+        analysis.ggf_00.draw('o1', ggf, category, TARGET_REGION)
+
+        # normalize                                                                                      
+#        ztt_mmc /= ztt_mmc.integral()
+        vbf /= vbf.integral()
+        ggf /= ggf.integral()
+        ztt /= ztt.integral()
+
+
+        # plot the mass distributions                                                                    
+        plot_o1(vbf, ggf, ztt, category)
+
+        vbf.Write()
+        ggf.Write()
+        ztt.Write()
+
+
+"""
+    draw_channel(channel,
+        category=category,
+        plot_label='Sideband CR',
+        data_info=str(analysis.data.info),
+        output_name='event_bdt_score_control' + suffix,
+        name='BDT score',
+        systematics=systematics,
+        output_formats=args.output_formats,
+        ypadding=(0.4, 0.),
+        log_ypadding=(0.5, 0.1),
+        #range=(-1, 1),                                                                                               
+        signal_scale=signal_scale,
+        signal_on_top=False,
+        show_ratio=True,
+        output_dir=plot_dir('bdt'))
 """
