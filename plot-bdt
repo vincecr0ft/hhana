@@ -67,7 +67,7 @@ UNBLIND = {
 }
 
 
-def plot_bdt(category, workspace_binning=True):
+def plot_bdt(category, workspace_binning=False):
     # create BDT validation plots
     clf = analysis.get_clf(category, load=True, mass=125, transform=True)
     suffix = clf.output_suffix

@@ -25,9 +25,9 @@ TAUTAUHADHADBR = 0.4197744 # = (1. - 0.3521) ** 2
 
 class Higgs(MC, Signal):
     MASSES = range(100, 155, 5)
-    MIXINGS = [-0.6,-0.5,-0.4,-0.3,
-                -0.2,-0.1, 0.0, 0.1, 0.2,
-                0.3, 0.4, 0.5, 0.6]
+    MIXINGS = [-0.60,-0.50,-0.40,-0.30,-0.20,-0.10,
+               -0.07,-0.05,-0.02, 0.00, 0.02, 0.05, 0.07, 
+                0.10, 0.20, 0.30, 0.40, 0.50, 0.60]
     MODES = ['Z', 'W', 'gg', 'VBF']
     MODES_COMBINED = [['Z', 'W'], ['gg'], ['VBF']]
     MODES_CP = [['Z', 'W', 'gg'], ['VBF']]
@@ -132,6 +132,8 @@ class Higgs(MC, Signal):
                  suffix=None,
                  label=None,
                  inclusive_decays=False,
+                 SM=False,
+                 BSM=False,
                  **kwargs):
         self.inclusive_decays = inclusive_decays
         if masses is None:
@@ -172,8 +174,11 @@ class Higgs(MC, Signal):
                 assert mode in Higgs.MODES
             assert len(set(modes)) == len(modes)
 
-        name = 'Signal'
+        self.SM=SM
+        self.BSM=BSM
 
+        name = 'Signal'
+        isNonVBF=False
         str_mode = ''
         if len(modes) == 1:
             str_mode = modes[0]
@@ -181,19 +186,25 @@ class Higgs(MC, Signal):
         elif len(modes) == 2 and set(modes) == set(['W', 'Z']):
             str_mode = 'V'
             name += '_%s' % str_mode
-        elif len(modes) == 2 and set(modes) == set(['gg', 'Z', 'W']):
-            str_mode = 'nonVBF'
+        elif len(modes) == 3 and set(modes) == set(['W', 'Z', 'gg']):
+            str_mode = 'gg/V'
             name += '_%s' % str_mode
-
+            isNonVBF=True
 
         str_mixings = ''
         if len(mixings) == 1:
-            str_mixings = "%0.1f" % mixings[0]
+            str_mixings = "%0.2f" % mixings[0]
             name += "_%s" % str_mixings
-
+            if mixings[0]==0.0 and BSM:
+                name+='_copy'
         if label is None:
             label = '%s#font[52]{H}(%s)#rightarrow#tau#tau' % (
                 str_mode, str_mixings)
+            if isNonVBF:
+                label = '%s#font[52]{H}(%s)#rightarrow#tau#tau' % (
+                    str_mode, '125')
+
+
 
         if year == 2011:
             if suffix is None:
@@ -337,6 +348,18 @@ class Higgs(MC, Signal):
                     histsys = histfactory.HistoSys(
                         pdf_term, low=low, high=high)
                     sample.AddHistoSys(histsys)
+
+        #mixing Norms
+        if self.SM:
+            print 'adding norm factor'
+            sample.AddNormFactor('ATLAS_epsilon', 1., -200., 200., False)
+        elif self.BSM:
+            print 'adding norm factor'
+            sample.AddNormFactor('ATLAS_epsilon_rejected', 1., -200., 200., False)
+        else:
+            print 'no norms for ',self.name
+
+
 
         # BR_tautau
         _, (br_up, br_down) = yellowhiggs.br(

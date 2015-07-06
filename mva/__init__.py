@@ -86,7 +86,8 @@ CONST_PARAMS = [
     'mu_BR_tautau',
 ]
 
-POI = 'SigXsecOverSM'
+#POI = 'SigXsecOverSM'
+POI = 'ATLAS_epsilon_rejected ATLAS_epsilon'
 
 # pip install --user GitPython
 from git import Repo

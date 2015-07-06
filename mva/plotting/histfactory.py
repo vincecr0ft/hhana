@@ -42,16 +42,9 @@ def draw_channel(channel, fit=None, no_data=False,
                 sample.name, sys_name, osys.high, osys.low))
         nominal_hist.systematics = _systematics
         if sample.GetNormFactor('SigXsecOverSM') is not None:
-            print "###############################"
-            print "This integral is ",nominal_hist.Integral(1,6)
-            print "###############################"
             signal_hists.append(nominal_hist)
         else:
-            model_hists.append(nominal_hist)
-            print "###############################"
-            print "This integral is ",nominal_hist.Integral(1,6)
-            print "###############################"
-            
+            model_hists.append(nominal_hist)            
     if 'systematics' in kwargs:
         del kwargs['systematics']
     figs = []

@@ -500,8 +500,12 @@ class Sample(object):
                         shapesys.hist = high
                         sample.AddShapeSys(shapesys)
             if isinstance(self, Signal):
-                sample.AddNormFactor('SigXsecOverSM', 0., -200., 200., False)
-            elif isinstance(self, Background):
+#                sample.AddNormFactor('SigXsecOverSM', 0., -200., 200., False)
+                if self.SM:
+                    sample.AddNormFactor('ATLAS_epsilon', 1., -200., 200., False)                    
+                elif self.BSM:
+                    sample.AddNormFactor('ATLAS_epsilon_rejected', 1., -200., 200., False)
+            if isinstance(self, Background): #formerly elif
                 # only activate stat error on background samples
                 sample.ActivateStatError()
             if not isinstance(self, Data):

@@ -1,3 +1,4 @@
+
 # stdlib imports
 import random
 from collections import namedtuple
@@ -88,9 +89,7 @@ class Analysis(object):
         self.suffix = suffix
         self.norm_field = norm_field
         self.mixings = mixings
-        print 'mixings!!!',mixings
-        for m in mixings:
-            print m," mixing baby"
+        print 'target region ',self.target_region
 
         if use_embedding:
             log.info("Using embedded Ztautau")
@@ -147,6 +146,31 @@ class Analysis(object):
             scale=self.mu,
             ggf_weight=ggf_weight)
 
+        self.vbf_52 = samples.Higgs(
+            year=year,
+            mass=125,
+            mixing=-0.2,
+            mode='VBF',
+            systematics=systematics,
+            linecolor='red',
+            linewidth=2,
+            linestyle='dashed',
+            scale=self.mu,
+            ggf_weight=ggf_weight)
+
+        self.vbf_06 = samples.Higgs(
+            year=year,
+            mass=125,
+            mixing=0.6,
+            mode='VBF',
+            systematics=systematics,
+            linecolor='red',
+            linewidth=2,
+            linestyle='dashed',
+            scale=self.mu,
+            ggf_weight=ggf_weight)
+
+
         self.ggf_00 = samples.Higgs(
             year=year,
             mass=125,
@@ -175,10 +199,20 @@ class Analysis(object):
         self.qcd.scale = 1.
         self.ztautau.scale = 1.
 
+        self.H125 = samples.Higgs(
+            year=self.year,
+            mass=125,
+            modes=['W','Z','gg'],
+            systematics=self.systematics,
+            scale=self.mu,
+            ggf_weight=ggf_weight,
+            color='#FF0000')
+            
         self.backgrounds = [
             self.qcd,
             self.others,
             self.ztautau,
+            self.H125,
         ]
 
         self.ggf_weight = ggf_weight
@@ -194,17 +228,6 @@ class Analysis(object):
         if scale_125:
             events_125 = self.higgs_125.events()[1].value
         if mode == 'CP':
-            sother1  = samples.Higgs(
-                year=self.year,
-                mass=125,
-                modes=['gg','Z','W'],
-                systematics=self.systematics,
-                scale=self.mu,
-                linecolor='black',
-                linewidth=2,
-                linestyle='dashed',
-                ggf_weight=self.ggf_weight)
-            signals.append(sother1)
             for m in mixing:
                 if m<-0.3:
                     col = 'red'
@@ -237,6 +260,17 @@ class Analysis(object):
             return signals
         if mode == 'combined':
             for m in mixing:
+                if m<-0.3:
+                    col = 'red'
+                elif m<0:
+                    col = 'pink'
+                elif m>0.3:
+                    col= 'blue'
+                elif m>0.0:
+                    col= 'purple'
+                else:
+                    col='black'
+
                 s = samples.Higgs(
                     year=self.year,
                     mass=125,
@@ -282,6 +316,34 @@ class Analysis(object):
                         log.info(str(s.mass))
                         s.scale *= sf
                     signals.append(s)
+        elif mode == 'CPworkspace':
+            print 'in CPworkspace'
+            print 'with mixing ',mixing
+            if (len(mixing)==1 and mixing==[0.0]) or mixing == 0.0: 
+                signals.append(samples.Higgs(
+                    year=self.year,
+                    mode='VBF',
+                    mass=125,
+                    mixing=0.0, #formerly m
+                    systematics=self.systematics,
+                    scale=self.mu,
+                    ggf_weight=self.ggf_weight,
+                    BSM=True))
+                print "adding a BSM d_tilde=0"
+            for m in mixing:
+                s = samples.Higgs(
+                    year=self.year,
+                    mode='VBF',
+                    mass=125,
+                    mixing=m, #formerly m
+                    systematics=self.systematics,
+                    scale=self.mu,
+                    ggf_weight=self.ggf_weight)
+                if m == 0.0:
+                    s.SM=True
+                else:
+                    s.BSM=True
+                signals.append(s)
         elif mode is None:
             for m in mixing:
                 for modes in samples.Higgs.MODES_COMBINED:
@@ -410,6 +472,7 @@ class Analysis(object):
                           cuts=None,
                           include_signal=True,
                           mass=125,
+                          mixing=0.0,
                           mode=None,
                           scale_125=False,
                           clf=None,
@@ -455,7 +518,7 @@ class Analysis(object):
             else:
                 suffix = '_%d' % mass
             channel_name += suffix
-            samples += self.get_signals(mass,self.mixings, mode, scale_125=scale_125)
+            samples += self.get_signals(mass, mixing, mode, scale_125=scale_125)
 
         # create HistFactory samples
         histfactory_samples = []

@@ -27,15 +27,24 @@ from mva import log, plot_dir
 
 import ROOT
 
-def plot_o1(vbf, ggf, ztt, category):
+def plot_bin(vbf, ggf, ztt, binNr, category):
     _, _, _, ymax = rootpy_utils.get_limits([ztt, vbf, ggf], ypadding=(0.3, 0)) 
     plot = Canvas()
-    ztt.Draw()
-    ztt.yaxis.title = 'Fraction of Events / 5 GeV'
-    ztt.xaxis.title = 'Obtimal Observable 1 (O1)' 
-    ztt.yaxis.SetLimits(0, ymax)
-    ztt.yaxis.SetRangeUser(0, ymax)
-    ztt.xaxis.SetNdivisions(507, True)
+    vbfE = vbf.Clone(fillcolor=vbf.GetLineColor(),fillstyle='/')
+    zttE = ztt.Clone(fillcolor=ztt.GetLineColor(),fillstyle='/')
+    ggfE = ggf.Clone(fillcolor=ggf.GetLineColor(),fillstyle='/')
+    vbfE.drawstyle = 'e2'
+    ggfE.drawstyle = 'e2'
+    zttE.drawstyle = 'e2'
+    zttE.Draw()
+    zttE.yaxis.title = 'Fraction of Events / 5 GeV'
+    zttE.xaxis.title = 'Obtimal Observable 1 (O1) in bin '+str(binNr) 
+    zttE.yaxis.SetLimits(0, ymax)
+    zttE.yaxis.SetRangeUser(0, ymax)
+    zttE.xaxis.SetNdivisions(507, True)
+    vbfE.Draw("same")
+    ggfE.Draw("same")
+    ztt.Draw("same")
     vbf.Draw('same')
     ggf.Draw('same')
     leg_o1 = Legend(2, pad=plot,
@@ -65,10 +74,106 @@ def plot_o1(vbf, ggf, ztt, category):
     label.SetTextSize(22)
     label.Draw()
     for fmt in args.output_formats:
+        plot.SaveAs('plots/bin_%s_O1_%s%s.%s' % (binNr, category.name, output_suffix, fmt))
+
+def plot_sample(bin1, bin2, bin3, bin4, bin5, sample, category):
+    _, _, _, ymax = rootpy_utils.get_limits([ztt, vbf, ggf], ypadding=(0.3, 0)) 
+    plot = Canvas()
+    bin1.SetLineColor('blue')
+    bin2.SetLineColor('purple')
+    bin3.SetLineColor('black')
+    bin4.SetLineColor('pink')
+    bin5.SetLineColor('red')
+    bin1.drawstyle = 'e2'
+    bin2.drawstyle = 'e2'
+    bin3.drawstyle = 'e2'
+    bin4.drawstyle = 'e2'
+    bin5.drawstyle = 'e2'
+    bin1.Draw()
+    bin1.yaxis.title = 'Fraction of Events / 5 GeV'
+    bin1.xaxis.title = 'Obtimal Observable 1 (O1) '+str(sample) 
+    bin1.yaxis.SetLimits(0, ymax)
+    bin1.yaxis.SetRangeUser(0, ymax)
+    bin1.xaxis.SetNdivisions(507, True)
+    bin2.Draw("same")
+    bin3.Draw("same")
+    bin4.Draw("same")
+    bin5.Draw('same')
+    leg_o1 = Legend(2, pad=plot,
+                     entryheight=0.08,
+                     margin=0.2,
+                     textsize=22,
+                     entrysep=0.01)
+    leg_o1.AddEntry(bin1, style='L')
+    leg_o1.AddEntry(bin2, style='L')
+    leg_o1.AddEntry(bin3, style='L')
+    leg_o1.AddEntry(bin4, style='L')
+    leg_o1.AddEntry(bin5, style='L')
+    leg_o1.SetHeader(str(sample)+' ObtObs')
+    leg_o1.Draw()
+    if args.year == 2011:
+        sqrts = 7
+    elif args.year == 2012:
+        sqrts = 8
+    else:
+        sqrts= None
+
+    ATLAS_label(plot.GetLeftMargin()+0.03, 0.89,
+                sep=0.14, pad=plot, sqrts=sqrts,
+                text="Internal", textsize=22)
+    label = ROOT.TLatex( plot.GetLeftMargin() + 0.03, 0.83,
+                         category.label )
+    label.SetNDC()
+    label.SetTextFont(43)
+    label.SetTextSize(22)
+    label.Draw()
+    for fmt in args.output_formats:
+        plot.SaveAs('plots/%s_O1_%s%s.%s' % (sample, category.name, output_suffix, fmt))
+
+
+def plot_o1(vbf, vbf52, vbf06, ggf, ztt, category):
+    _, _, _, ymax = rootpy_utils.get_limits([ztt, vbf, vbf52, vbf06, ggf], ypadding=(0.3, 0)) 
+    plot = Canvas()
+    ztt.Draw()
+    ztt.yaxis.title = 'Fraction of Events / 5 GeV'
+    ztt.xaxis.title = 'Obtimal Observable 1 (O1)' 
+    ztt.yaxis.SetLimits(0, ymax)
+    ztt.yaxis.SetRangeUser(0, ymax)
+    ztt.xaxis.SetNdivisions(507, True)
+    vbf.Draw('same')
+    vbf52.Draw('same')
+    vbf06.Draw('same')
+    ggf.Draw('same')
+    leg_o1 = Legend(2, pad=plot,
+                     entryheight=0.08,
+                     margin=0.2,
+                     textsize=22,
+                     entrysep=0.01)
+    leg_o1.AddEntry(ztt, style='L')
+    leg_o1.AddEntry(ggf, style='L')
+    leg_o1.AddEntry(vbf, style='L')
+    leg_o1.AddEntry(vbf52, style='L')
+    leg_o1.AddEntry(vbf06, style='L')
+    leg_o1.SetHeader('ObtObs')
+    leg_o1.Draw()
+    if args.year == 2011:
+        sqrts = 7
+    elif args.year == 2012:
+        sqrts = 8
+    else:
+        sqrts= None
+
+    ATLAS_label(plot.GetLeftMargin()+0.03, 0.89,
+                sep=0.14, pad=plot, sqrts=sqrts,
+                text="Internal", textsize=22)
+    label = ROOT.TLatex( plot.GetLeftMargin() + 0.03, 0.83,
+                         category.label )
+    label.SetNDC()
+    label.SetTextFont(43)
+    label.SetTextSize(22)
+    label.Draw()
+    for fmt in args.output_formats:
         plot.SaveAs('plots/lowBDTO1_%s%s.%s' % (category.name, output_suffix, fmt))
-
-
-
 
 SYSTEMATICS = get_systematics(year)
 args.systematics_components = parse_systematics(args.systematics_components)
@@ -121,83 +226,143 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
 
     clf = None
     if not is_control:
-        clf = analysis.get_clf(category, load=True, transform=True)
+        clf = analysis.get_clf(category, load=True, mass=125, transform=True)
     binning=clf.binning(analysis.year, overflow=1E5)
     for bin in binning: print bin
 
     if is_control:
         continue
 
-    ### draw whole channel in low BDT region 
-    figs = draw_channel_array(
-        analysis,
-        vars=VARS,
-        mass=125,
-        mode='combined',
-        signal_scale=(
-            50 if is_control or 'preselection' in category.name else 1),
-        plot_label=(
-            'Signal Region' if not is_control and
-            not ('preselection' in category.name) else None),
-        category=category,
-        region=target_region,
-        #systematics_components=args.systematics_components,
-        output_formats=args.output_formats,
-        weighted=not args.no_weight,
-        plots=args.plots,
-        output_suffix=output_suffix,
-        unblind=args.unblind,  # or is_control,
-        cuts=cuts,
-        show_ratio=args.show_ratio,
-        signal_on_top=True,
-        clf=clf,
-        max_score=0.567454611796,#-0.0889747504412,
-        #min_score=0.815967620756,#0.567454611796,#-0.0889747504412,
-        no_data=args.no_data,
-        #top_label="Fakes Model: {0}".format(analysis.fakes_region),
-        )
+
+    bins_hist = Hist(binning)
+    bins_edges = list(zip(bins_hist.xedgesl(), bins_hist.xedgesh()))
+
+    vbf_00 = analysis.vbf_00
+    ggf_00 = analysis.ggf_00
+    ztt_00 = analysis.ztautau
+#    h125 = analysis.higgs_125
+    scores = vbf_00.scores(clf, category, 'OS_ISOL')
+    thisBin=0
+    for edges in bins_edges:
+        thisBin+=1
+        print 'this bin number is',thisBin
+        print edges[0],' to ',edges[1]
+
+    ### draw shapes in each BDT region 
+    thisBin=0
+    zttshape=[]
+    for edges in bins_edges:
+        thisBin+=1
+        vbf_field_hist, vbf_field_scale = vbf_00.get_field_hist(VARS, category)
+        ggf_field_hist, ggf_field_scale = ggf_00.get_field_hist(VARS, category)
+        ztt_field_hist, ztt_field_scale = ztt_00.get_field_hist(VARS, category)
+        vbf_00.draw_array(
+            vbf_field_hist, category, 'OS_ISOL',
+            field_scale=vbf_field_scale,
+            clf=clf,
+            scores=scores,
+            min_score=edges[0],
+            max_score=edges[1])
+        ggf_00.draw_array(
+            ggf_field_hist, category, 'OS_ISOL',
+            field_scale=ggf_field_scale,
+            clf=clf,
+            scores=scores,
+            min_score=edges[0],
+            max_score=edges[1])
+        ztt_00.draw_array(
+            ztt_field_hist, category, 'OS_ISOL',
+            field_scale=ztt_field_scale,
+            clf=clf,
+            scores=scores,
+            min_score=edges[0],
+            max_score=edges[1])
+        vbf = Hist(40, -30, 30, linewidth=3, linestyle='dashed', linecolor='blue')
+        ggf = Hist(40, -30, 30, linewidth=3, linestyle='solid', linecolor='red')
+        ztt = Hist(40, -30, 30, linewidth=3, linestyle='solid')
+
+        for k , h in vbf_field_hist.items():
+            log.info('{0:1.2f} < score < {1:1.2f}: for vbf {2} = {3}'.format(
+                    edges[0], edges[1], k, h.GetMean()))
+            if k=='o1':
+                vbf=h
+                vbf /= vbf.integral()
+        for k , h in ggf_field_hist.items():
+            log.info('{0:1.2f} < score < {1:1.2f}: for ggf {2} = {3}'.format(
+                    edges[0], edges[1], k, h.GetMean()))
+            if k=='o1':
+                ggf=h
+                ggf.SetLineColor('black')
+                ggf /= ggf.integral()
+        for k , h in ztt_field_hist.items():
+            log.info('{0:1.2f} < score < {1:1.2f}: for ztt {2} = {3}'.format(
+                    edges[0], edges[1], k, h.GetMean()))
+            if k=='o1':
+                ztt=h
+                ztt /= ztt.integral()            
+                zttshape.append(ztt)
+        plot_bin(vbf,ggf,ztt,thisBin,category)
+        print 'zttshape', zttshape
+        plot_sample(zttshape[0],zttshape[1],zttshape[2],zttshape[3],zttshape[4],'ztautau',category)
 
 ### draw whole optobs comparison 
 with root_open('o1_hadhad_histos.root', 'recreate') as out:
     template = Hist(40, -30, 30, linewidth=3, drawstyle='hist')
     for category in categories:
-        vbf = template.Clone(name="truevbf_%s" % category.name, title=analysis.vbf_00.label, linecolor='blue',linestyle='dashed')
-        ggf = template.Clone(name="trueggf_%s" % category.name, title=analysis.ggf_00.label, linecolor='red', linestyle='dashed' )
+        vbf = template.Clone(name="truevbf_%s" % category.name, title=analysis.vbf_00.label, linecolor='black',linestyle='dashed')
+        vbf52 = template.Clone(name="vbf52_%s" % category.name, title=analysis.vbf_52.label, linecolor='pink',linestyle='dashed')
+        vbf06 = template.Clone(name="vbf06_%s" % category.name, title=analysis.vbf_06.label, linecolor='blue',linestyle='dashed')
+        ggf = template.Clone(name="trueggf_%s" % category.name, title=analysis.ggf_00.label, linecolor='red')
         ztt = template.Clone(name="ztt_%s" % category.name, title=analysis.ztautau.label)
 
         analysis.ztautau.draw('o1', ztt, category, TARGET_REGION)
         analysis.vbf_00.draw('o1', vbf, category, TARGET_REGION)
+        analysis.vbf_52.draw('o1', vbf52, category, TARGET_REGION)
+        analysis.vbf_06.draw('o1', vbf06, category, TARGET_REGION)
         analysis.ggf_00.draw('o1', ggf, category, TARGET_REGION)
 
         # normalize                                                                                      
-#        ztt_mmc /= ztt_mmc.integral()
         vbf /= vbf.integral()
+        vbf52 /= vbf52.integral()
+        vbf06 /= vbf06.integral()
         ggf /= ggf.integral()
         ztt /= ztt.integral()
 
 
         # plot the mass distributions                                                                    
-        plot_o1(vbf, ggf, ztt, category)
+        plot_o1(vbf, vbf52, vbf06, ggf, ztt, category)
 
         vbf.Write()
+        vbf52.Write()
+        vbf06.Write()
         ggf.Write()
         ztt.Write()
 
 
 """
+
+    #Draw BDT
+    scores, channel = analysis.clf_channels(clf,
+        category, TARGET_REGION, cuts=signal_region,
+        mass=125,
+        mode='CP',
+        bins=10,
+        systematics=False,
+        unblind=True,
+        no_signal_fixes=True)
+
     draw_channel(channel,
         category=category,
-        plot_label='Sideband CR',
+        plot_label='BDT score',
         data_info=str(analysis.data.info),
-        output_name='event_bdt_score_control' + suffix,
+        output_name='event_bdt_score_control',
         name='BDT score',
-        systematics=systematics,
+        systematics=False,
         output_formats=args.output_formats,
         ypadding=(0.4, 0.),
         log_ypadding=(0.5, 0.1),
-        #range=(-1, 1),                                                                                               
-        signal_scale=signal_scale,
-        signal_on_top=False,
-        show_ratio=True,
-        output_dir=plot_dir('bdt'))
+        signal_scale=1,
+        signal_on_top=True,
+        show_ratio=True)
+
 """

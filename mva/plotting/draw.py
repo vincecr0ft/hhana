@@ -126,7 +126,7 @@ def draw(name,
          signal_colors=None,
          show_signal_error=False,
          fill_signal=False,
-         stack_signal=False,
+         stack_signal=True,
          units=None,
          plot_label=None,
          ylabel='Events',
@@ -179,6 +179,13 @@ def draw(name,
     objects = []
     legends = []
 
+    if not stack_signal and signal_on_top:
+        print "lot's on top"
+        special_stack=True
+    else:
+        print "no special"
+        special_stack=False
+
     if show_ratio and (data is None or model is None):
         # cannot show the ratio if data or model was not specified
         show_ratio=False
@@ -203,7 +210,8 @@ def draw(name,
             prune_ratio_ticks=True)
     else:
         fig = SimplePlot(logy=logy)
-
+    nonVBF = [s for s in signal if 'gg' in s.GetTitle()]
+    signal = [s for s in signal if not 'gg' in s.GetTitle()]
     if signal is not None:
         if signal_scale != 1.:
             scaled_signal = []
@@ -234,30 +242,51 @@ def draw(name,
                     s.linestyle = 'solid'
                 alpha = 1.
 
-    if model is not None:
-        if model_colors is not None:
-            set_colors(model, model_colors)
+    if not special_stack:
+        if model is not None:
+            if nonVBF is not None:
+                for ggf in nonVBF:
+                    model.append(ggf)
+            if model_colors is not None:
+                set_colors(model, model_colors)
         # create the model stack
-        model_stack = HistStack()
-        for hist in model:
-            hist.SetLineWidth(0)
-            hist.drawstyle = 'hist'
-            model_stack.Add(hist)
-        if signal is not None and signal_on_top:
-            if stack_signal:
-                for s in scaled_signal:
-                    model_stack.Add(s)                
-        objects.append(model_stack)
+            model_stack = HistStack()
+            for hist in model:
+                hist.SetLineWidth(0)
+                hist.drawstyle = 'hist'
+                model_stack.Add(hist)
+            if signal is not None and signal_on_top:
+                if stack_signal:
+                    for s in scaled_signal:
+                        model_stack.Add(s)                
+            objects.append(model_stack)
 
-    if signal is not None and not signal_on_top:
-        if stack_signal:
-            # create the signal stack
-            signal_stack = HistStack()
-            for hist in scaled_signal:
-                signal_stack.Add(hist)
-            objects.append(signal_stack)
-        else:
-            objects.extend(scaled_signal)
+        if signal is not None and not signal_on_top:
+            if stack_signal:
+                # create the signal stack
+                signal_stack = HistStack()
+                for hist in scaled_signal:
+                    signal_stack.Add(hist)
+                objects.append(signal_stack)
+            else:
+                objects.extend(scaled_signal)
+    else:
+        if model is not None:
+            if nonVBF is not None:
+                for ggf in nonVBF:
+                    model.append(ggf)
+            if model_colors is not None:
+                set_colors(model, model_colors)
+        # create the special stack
+            for s in scaled_signal:
+                sig_stack = HistStack()
+                for hist in model:
+                    hist.SetLineWidth(0)
+                    hist.drawstyle = 'hist'
+                    sig_stack.Add(hist)
+                sig_stack.Add(s)                
+                objects.append(sig_stack)
+
 
     if model is not None:
         # draw uncertainty band

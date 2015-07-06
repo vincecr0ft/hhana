@@ -64,6 +64,9 @@ CATEGORIES = {
         Category_VBF,
         Category_Boosted,
         ],
+    'mva_vbf': [
+        Category_VBF,
+        ],
     'mva_all': [
         Category_VBF,
         Category_Boosted,

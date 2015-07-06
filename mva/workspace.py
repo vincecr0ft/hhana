@@ -1,3 +1,4 @@
+
 import os
 import math
 
@@ -39,27 +40,37 @@ def write_workspaces(path, prefix, year_mass_category_channel,
             channels = []
             # make workspace for each category
             # include the control region in each
+            nCategories=0
             for category, channel in category_channel.items():
+                nCategories+=1
                 name = "{0}_{1}_{2}_{3}".format(
                     prefix, year % 1000, category, mass)
                 log.info("writing {0} ...".format(name))
                 # make workspace
+                print 'name coming in here ',name,' goes to...'
+                if mass<0.:
+                    parity='m'
+                else:
+                    parity='p'
+                newname = "AllSys_cp_{}_0_{:02.0f}_{}".format(parity, abs(mass*100), prefix)
+
+                print newname
                 measurement = histfactory.make_measurement(
-                    name, [channel] + mass_controls,
+                    newname, [channel] + mass_controls,
                     POI=POI,
                     const_params=CONST_PARAMS)
-                workspace = histfactory.make_workspace(measurement, name=name,
+                workspace = histfactory.make_workspace(measurement, name=newname,
                                                        silence=silence)
-                with root_open(os.path.join(path, '{0}.root'.format(name)),
+                with root_open(os.path.join(path, '{0}.root'.format(newname)),
                                'recreate') as workspace_file:
                     workspace.Write()
                     # mu=1 for Asimov data
-                    #measurement.SetParamValue('SigXsecOverSM', 1)
+#                    measurement.SetParamValue('ATLAS_epsilon', 1)
                     histfactory.write_measurement(measurement,
                         root_file=workspace_file,
-                        xml_path=os.path.join(path, name),
+                        xml_path=os.path.join(path, newname),
                         silence=silence)
-                channels.append(channel)
+                channels.append(channel)            
             # make combined workspace
             name = "{0}_{1}_combination_{2}".format(prefix, year % 1000, mass)
             log.info("writing {0} ...".format(name))
@@ -311,7 +322,6 @@ def weighted_mass_workspace(analysis, categories, masses,
             channels[mass][category.name] = channel
     return channels, []
 
-
 def weighted_mass_cba_workspace(analysis, categories, masses,
                                 systematics=False,
                                 cuts=None):
@@ -355,6 +365,113 @@ def weighted_mass_cba_workspace(analysis, categories, masses,
             channels[mass][category.name] = channel
     return channels, []
 
+
+def weighted_mixing_workspace(analysis, categories, masses, mixings,
+                            systematics=False,
+                            cuts=None):
+    hist_template = Hist(6, -10, 10, type='D')
+    channels = {}
+    for category in analysis.iter_categories(categories):
+        clf = analysis.get_clf(category, load=True, mass=125)
+        clf_bins = clf.binning(analysis.year, overflow=1E5)
+        scores = analysis.get_scores(
+            clf, category, analysis.target_region,
+            masses=[125], mode='CP',
+            systematics=False,
+            unblind=True)
+        bkg_scores = scores.bkg_scores
+        sig_scores = scores.all_sig_scores[125]
+        min_score = scores.min_score
+        max_score = scores.max_score
+        bkg_score_hist = Hist(clf_bins, type='D')
+        sig_score_hist = bkg_score_hist.Clone()
+        hist_scores(bkg_score_hist, bkg_scores)
+        _bkg = bkg_score_hist.Clone()
+        hist_scores(sig_score_hist, sig_scores)
+        _sig = sig_score_hist.Clone()
+        sob_hist = (1 + _sig / _bkg)
+        _log = math.log
+        for bin in sob_hist.bins(overflow=True):
+            bin.value = _log(bin.value)
+        log.info(str(list(sob_hist.y())))
+
+        print "getting workspaces for ",mixings
+        for mixing in mixings:
+            if not mixing==0.0:
+                comparison=[0.0,mixing]
+            else:
+                comparison=[0.0]
+            channel = analysis.get_channel_array(
+                {'o1': hist_template},
+                category=category,
+                region=analysis.target_region,
+                include_signal=True,
+                weight_hist=sob_hist,
+                clf=clf,
+                cuts=cuts,
+                mass=125,
+                mixing=comparison,
+                mode='CPworkspace',
+                systematics=systematics)['o1']
+            if mixing not in channels:
+                channels[mixing] = {}
+            channels[mixing][category.name] = channel
+    return channels, []
+
+
+"""
+def weighted_mixing_workspace(analysis, categories, masses, mixings,
+                                systematics=False,
+                                cuts=None):
+    hist_template = Hist(6, -10, 10, type='D')
+    channels = {}
+
+    print "getting workspaces for ",mixings
+    def scaled(hist, factor):
+        new_hist = hist * factor
+        new_hist.name = hist.name + '_scaled'
+        return new_hist
+
+    for category in analysis.iter_categories(categories):
+        print 'this category is ', category.name
+        print 'mixings are ',mixings
+        for mixing in mixings:
+            print 'this mixing is ',mixing
+            if not mixing==0.0:
+                comparison=[0.0,mixing]
+            else:
+                comparison=[0.0]
+            print 'getting channel array ',comparison
+            channel = analysis.get_channel_array(
+                {'o1': hist_template},
+                category=category,
+                region=analysis.target_region,
+                include_signal=True,
+                cuts=cuts,
+                mixing=comparison,
+                mode='CPworkspace',
+                systematics=systematics)['o1']
+            # weight by ln(1 + s / b)
+            total_s = hist_template.Clone()
+            total_s.Reset()
+            total_b = total_s.Clone()
+            for sample in channel.samples:
+                if is_signal(sample):
+                    total_s += sample.hist
+                else:
+                    total_b += sample.hist
+            sob = math.log(1 + total_s.integral() / total_b.integral())
+            channel.data.hist = scaled(channel.data.hist, sob)
+            for sample in channel.samples:
+                sample.hist = scaled(sample.hist, sob)
+                for hsys in sample.histo_sys:
+                    hsys.high = scaled(hsys.high, sob)
+                    hsys.low = scaled(hsys.low, sob)
+            if mixing not in channels:
+                channels[mixing] = {}
+            channels[mixing][category.name] = channel
+    return channels, []
+"""
 
 def mass2d_workspace(analysis, categories, masses,
                      systematics=False):

@@ -5,13 +5,13 @@ from mva import cmd, MMC_MASS
 from mva.samples import Higgs
 from mva.workspace import (
     write_workspaces, cuts_workspace, mva_workspace,
-    feature_workspace, weighted_mass_workspace, weighted_mass_cba_workspace)
+    feature_workspace, weighted_mass_workspace, weighted_mixing_workspace, weighted_mass_cba_workspace)
 from mva.analysis import get_analysis
 from mva.massregions import MassRegions
 
 parser = cmd.analysis_parser(cmd.general_parser(
     multi_years=True, multi_categories=True))
-parser.add_argument('type', choices=('mva', 'cuts', 'var', 'weighted-mass', 'weighted-mass-cba'), default='mva')
+parser.add_argument('type', choices=('mva', 'cuts', 'var', 'weighted-mass', 'weighted-mixing', 'weighted-mass-cba'), default='mva')
 parser.add_argument('--clf-mass', type=int, default=None)
 parser.add_argument('--clf-bins', default='optimal')
 parser.add_argument('--clf-swap', default=False, action='store_true')
@@ -24,7 +24,11 @@ if args.masses == 'all':
     args.masses = Higgs.MASSES
 else:
     args.masses = map(int, args.masses.split(','))
+if args.type == 'weighted-mixing':
+    args.mixings = Higgs.MIXINGS
+    args.mixings = [0.0]
 
+print 'mixings requested: ',args.mixings
 cuts = None
 if args.sideband:
     massregions = MassRegions()
@@ -45,6 +49,8 @@ elif args.type == 'cuts':
     params['unblind'] = args.unblind
 elif args.type == 'weighted-mass':
     workspace_func = weighted_mass_workspace
+elif args.type == 'weighted-mixing':
+    workspace_func = weighted_mixing_workspace
 elif args.type == 'weighted-mass-cba':
     workspace_func = weighted_mass_cba_workspace
 else:
@@ -55,6 +61,7 @@ else:
 
 years = args.years
 categories = args.categories
+print 'categories are now', categories
 if len(categories) == 1 and len(years) > 1:
     categories = categories * len(years)
 elif len(categories) != len(years):
@@ -67,9 +74,11 @@ for year, year_categories in zip(years, categories):
     sr, cr = workspace_func(analysis=analysis,
                             categories=year_categories,
                             masses=args.masses,
+                            mixings=args.mixings,
                             systematics=args.systematics,
                             cuts=cuts,
                             **params)
+    print "got signal regions ",sr
     signal_regions[year] = sr
     control_regions[year] = cr
 
@@ -84,3 +93,4 @@ if args.output_suffix:
     suffix += '_' + args.output_suffix
 path = 'workspaces/hh{0}'.format(suffix.lower())
 write_workspaces(path, 'hh', signal_regions, controls=control_regions)
+
