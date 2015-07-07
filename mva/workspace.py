@@ -71,7 +71,9 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                         xml_path=os.path.join(path, newname),
                         silence=silence)
                 channels.append(channel)            
+            print 'length of channels ',len(channels)
             # make combined workspace
+"""
             name = "{0}_{1}_combination_{2}".format(prefix, year % 1000, mass)
             log.info("writing {0} ...".format(name))
             measurement = histfactory.make_measurement(
@@ -109,7 +111,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
         # make workspace for each category
         # include the control region in each
         # TODO: categories might be different across years
-        """
+
         for category in categories:
             cat_channels = [year_mass_category_channel[year][mass][category]
                             for year in years]
@@ -133,7 +135,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                     xml_path=os.path.join(path, name),
                     silence=silence)
             channels.extend(cat_channels)
-        """
+
         channels = [chan for year in years
                     for chan in year_mass_category_channel[year][mass].values()]
         # make combined workspace
@@ -154,7 +156,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                 root_file=workspace_file,
                 xml_path=os.path.join(path, name),
                 silence=silence)
-
+"""
 
 def mva_workspace(analysis, categories, masses,
                   clf_mass=None,
@@ -417,6 +419,60 @@ def weighted_mixing_workspace(analysis, categories, masses, mixings,
                 channels[mixing] = {}
             channels[mixing][category.name] = channel
     return channels, []
+
+def mixing_workspace(analysis, categories, masses, mixings,
+                            systematics=False,
+                            cuts=None):
+    hist_template = Hist([-15,-5,-2.5,0,2.5,5,15], type='D')
+    channels = {}
+    for category in analysis.iter_categories(categories):
+        clf = analysis.get_clf(category, load=True, mass=125)
+        clf_bins = clf.binning(analysis.year, overflow=1E5)
+        scores = analysis.get_scores(
+            clf, category, analysis.target_region,
+            masses=[125], mode='CP',
+            systematics=False,
+            unblind=True)
+        bkg_scores = scores.bkg_scores
+        sig_scores = scores.all_sig_scores[125]
+        min_score = scores.min_score
+        max_score = scores.max_score
+#        bkg_score_hist = Hist(clf_bins, type='D')
+#        sig_score_hist = bkg_score_hist.Clone()
+#        hist_scores(bkg_score_hist, bkg_scores)
+#        _bkg = bkg_score_hist.Clone()
+#        hist_scores(sig_score_hist, sig_scores)
+#        _sig = sig_score_hist.Clone()
+#        sob_hist = (1 + _sig / _bkg)
+#        _log = math.log
+#        for bin in sob_hist.bins(overflow=True):
+#            bin.value = _log(bin.value)
+#        log.info(str(list(sob_hist.y())))
+
+        print "getting workspaces for ",mixings
+        for mixing in mixings:
+            if not mixing==0.0:
+                comparison=[0.0,mixing]
+            else:
+                comparison=[0.0]
+            channel = analysis.get_channel_array(
+                {'o1': hist_template},
+                category=category,
+                region=analysis.target_region,
+                include_signal=True,
+#                weight_hist=sob_hist,
+                clf=clf,
+                cuts=cuts,
+                mass=125,
+                mixing=comparison,
+                min_score=0.567454611796,
+               mode='CPworkspace',
+                systematics=systematics)['o1']
+            if mixing not in channels:
+                channels[mixing] = {}
+            channels[mixing][category.name] = channel
+    return channels, []
+
 
 
 """

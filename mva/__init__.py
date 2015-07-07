@@ -87,7 +87,7 @@ CONST_PARAMS = [
 ]
 
 #POI = 'SigXsecOverSM'
-POI = 'ATLAS_epsilon_rejected ATLAS_epsilon'
+POI = ['ATLAS_epsilon_rejected','ATLAS_epsilon']
 
 # pip install --user GitPython
 from git import Repo

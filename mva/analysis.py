@@ -72,8 +72,8 @@ class Analysis(object):
                  fakes_region=FAKES_REGION,
                  decouple_qcd_shape=False,
                  coherent_qcd_shape=True,
-                 qcd_workspace_norm=None,
-                 ztt_workspace_norm=None,
+                 qcd_workspace_norm=False,
+                 ztt_workspace_norm=False,
                  constrain_norms=False,
                  qcd_shape_systematic=True,
                  random_mu=False,
@@ -96,7 +96,7 @@ class Analysis(object):
             self.ztautau = samples.Embedded_Ztautau(
                 year=year,
                 systematics=systematics,
-                workspace_norm=ztt_workspace_norm,
+                workspace_norm=False,#ztt_workspace_norm,
                 constrain_norm=constrain_norms,
                 color='#00A3FF')
         else:
@@ -104,7 +104,7 @@ class Analysis(object):
             self.ztautau = samples.MC_Ztautau(
                 year=year,
                 systematics=systematics,
-                workspace_norm=ztt_workspace_norm,
+                workspace_norm=False,#ztt_workspace_norm,
                 constrain_norm=constrain_norms,
                 color='#00A3FF')
 
@@ -191,7 +191,7 @@ class Analysis(object):
             shape_region=fakes_region,
             decouple_shape=decouple_qcd_shape,
             coherent_shape=coherent_qcd_shape,
-            workspace_norm=qcd_workspace_norm,
+            workspace_norm=False,#qcd_workspace_norm,
             constrain_norm=constrain_norms,
             shape_systematic=qcd_shape_systematic,
             color='#00FF00')
