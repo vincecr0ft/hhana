@@ -27,6 +27,70 @@ from mva import log, plot_dir
 
 import ROOT
 
+def plot_dependence(xbin1, xbin2, xbin3, xbin4, xbin5, xname, ybin1, ybin2, ybin3, ybin4, ybin5, yname, category):
+    _, _, _, ymax = rootpy_utils.get_limits([xbin1, xbin2, xbin3, xbin4, xbin5 ], ypadding=(0.3, 0)) 
+    plot = Canvas()
+    xsample = Hist(5, 0, 5, drawstyle='PE')
+    xsample.SetBinContent(1,xbin1.GetMean())
+    xsample.SetBinError(1,xbin1.GetMeanError())
+    xsample.SetBinContent(2,xbin2.GetMean())
+    xsample.SetBinError(2,xbin2.GetMeanError())
+    xsample.SetBinContent(3,xbin3.GetMean())
+    xsample.SetBinError(3,xbin3.GetMeanError())
+    xsample.SetBinContent(4,xbin4.GetMean())
+    xsample.SetBinError(4,xbin4.GetMeanError())
+    xsample.SetBinContent(5,xbin5.GetMean())
+    xsample.SetBinError(5,xbin5.GetMeanError())
+    xsample.Draw()
+    xsample.title = xbin1.title 
+    xsample.yaxis.title = 'Mean value of 01' 
+    xsample.xaxis.title = 'BDT bin'
+    xsample.yaxis.SetLimits(-2.5, 2.5)
+    xsample.yaxis.SetRangeUser(-2.5, 2.5)
+#    bin1.xaxis.SetNdivisions(507, True)
+
+    ysample = Hist(5, 0, 5, linewidth=3, drawstyle='E2', fillstyle='/', fillcolor='red',linecolor='red')
+    ysample.title = ybin1.title 
+    ysample.SetBinContent(1,ybin1.GetMean())
+    ysample.SetBinError(1,ybin1.GetMeanError())
+    ysample.SetBinContent(2,ybin2.GetMean())
+    ysample.SetBinError(2,ybin2.GetMeanError())
+    ysample.SetBinContent(3,ybin3.GetMean())
+    ysample.SetBinError(3,ybin3.GetMeanError())
+    ysample.SetBinContent(4,ybin4.GetMean())
+    ysample.SetBinError(4,ybin4.GetMeanError())
+    ysample.SetBinContent(5,ybin5.GetMean())
+    ysample.SetBinError(5,ybin5.GetMeanError())
+    ysample.Draw("same E2")
+
+    leg_o1 = Legend(2, pad=plot,
+                     entryheight=0.08,
+                     margin=0.2,
+                     textsize=22,
+                     entrysep=0.01)
+    leg_o1.AddEntry(xsample, style='L')
+    leg_o1.AddEntry(ysample, style='L')
+    leg_o1.SetHeader('ObtObs vs BDT bin')
+    leg_o1.Draw()
+    if args.year == 2011:
+        sqrts = 7
+    elif args.year == 2012:
+        sqrts = 8
+    else:
+        sqrts= None
+
+    ATLAS_label(plot.GetLeftMargin()+0.03, 0.89,
+                sep=0.14, pad=plot, sqrts=sqrts,
+                text="Internal", textsize=22)
+    label = ROOT.TLatex( plot.GetLeftMargin() + 0.03, 0.83,
+                         category.label )
+    label.SetNDC()
+    label.SetTextFont(43)
+    label.SetTextSize(22)
+    label.Draw()
+    for fmt in args.output_formats:
+        plot.SaveAs('plots/%s-%s_O1-vs-BDT_%s%s.%s' % (xname, yname, category.name, output_suffix, fmt))
+
 def plot_bin(vbf, ggf, ztt, binNr, category):
     _, _, _, ymax = rootpy_utils.get_limits([ztt, vbf, ggf], ypadding=(0.3, 0)) 
     plot = Canvas()
@@ -77,18 +141,38 @@ def plot_bin(vbf, ggf, ztt, binNr, category):
         plot.SaveAs('plots/bin_%s_O1_%s%s.%s' % (binNr, category.name, output_suffix, fmt))
 
 def plot_sample(bin1, bin2, bin3, bin4, bin5, sample, category):
-    _, _, _, ymax = rootpy_utils.get_limits([ztt, vbf, ggf], ypadding=(0.3, 0)) 
+    _, _, _, ymax = rootpy_utils.get_limits([bin1, bin2, bin3, bin4, bin5], ypadding=(0.3, 0)) 
     plot = Canvas()
+    bin1.SetFillColor('blue')
+    bin2.SetFillColor('purple')
+    bin3.SetFillColor('black')
+    bin4.SetFillColor('pink')
+    bin5.SetFillColor('red')
+    bin1.SetTitle(bin1.GetTitle()+" bin 1")
+    bin2.SetTitle(bin2.GetTitle()+" bin 2")
+    bin3.SetTitle(bin3.GetTitle()+" bin 3")
+    bin4.SetTitle(bin4.GetTitle()+" bin 4")
+    bin5.SetTitle(bin5.GetTitle()+" bin 5")
+    bin1.SetMarkerColor('blue')
+    bin2.SetMarkerColor('purple')
+    bin3.SetMarkerColor('black')
+    bin4.SetMarkerColor('pink')
+    bin5.SetMarkerColor('red')
     bin1.SetLineColor('blue')
     bin2.SetLineColor('purple')
     bin3.SetLineColor('black')
     bin4.SetLineColor('pink')
     bin5.SetLineColor('red')
-    bin1.drawstyle = 'e2'
-    bin2.drawstyle = 'e2'
-    bin3.drawstyle = 'e2'
-    bin4.drawstyle = 'e2'
-    bin5.drawstyle = 'e2'
+    bin1.drawstyle = 'E2'
+    bin2.drawstyle = 'E2'
+    bin3.drawstyle = 'E2'
+    bin4.drawstyle = 'E2'
+    bin5.drawstyle = 'E2'
+    bin1.fillstyle = '/'
+    bin2.fillstyle = '/'
+    bin3.fillstyle = '/'
+    bin4.fillstyle = '/'
+    bin5.fillstyle = '/'
     bin1.Draw()
     bin1.yaxis.title = 'Fraction of Events / 5 GeV'
     bin1.xaxis.title = 'Obtimal Observable 1 (O1) '+str(sample) 
@@ -173,7 +257,7 @@ def plot_o1(vbf, vbf52, vbf06, ggf, ztt, category):
     label.SetTextSize(22)
     label.Draw()
     for fmt in args.output_formats:
-        plot.SaveAs('plots/lowBDTO1_%s%s.%s' % (category.name, output_suffix, fmt))
+        plot.SaveAs('plots/O1_shape_%s%s.%s' % (category.name, output_suffix, fmt))
 
 SYSTEMATICS = get_systematics(year)
 args.systematics_components = parse_systematics(args.systematics_components)
@@ -233,6 +317,36 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     if is_control:
         continue
 
+    figs = draw_channel_array(
+        analysis,
+        vars=VARS,
+        mass=125,
+        mixings=args.mixings,
+        mode='CP',
+        signal_scale=(
+            50 if is_control or 'preselection' in category.name else 1),
+        plot_label=(
+            'low BDT CR' if not is_control and
+            not ('preselection' in category.name) else None),
+        category=category,
+        region=target_region,
+        output_formats=args.output_formats,
+        weighted=not args.no_weight,
+        plots=args.plots,
+        output_suffix='lowBDT',
+        unblind=args.unblind,  # or is_control,
+        cuts=cuts,
+        show_ratio=args.show_ratio,
+        signal_on_top=True,
+        stack_signal=False,
+        clf=clf,
+        max_score=0.815967620756,#-0.0889747504412,#0.567454611796,                                    
+        no_data=args.no_data,
+        #top_label="Fakes Model: {0}".format(analysis.fakes_region), 
+        )
+
+
+
 
     bins_hist = Hist(binning)
     bins_edges = list(zip(bins_hist.xedgesl(), bins_hist.xedgesh()))
@@ -240,8 +354,9 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     vbf_00 = analysis.vbf_00
     ggf_00 = analysis.ggf_00
     ztt_00 = analysis.ztautau
-#    h125 = analysis.higgs_125
-    scores = vbf_00.scores(clf, category, 'OS_ISOL')
+    vbfscores = vbf_00.scores(clf, category, 'OS_ISOL')
+    ggfscores = ggf_00.scores(clf, category, 'OS_ISOL')
+    zttscores = ztt_00.scores(clf, category, 'OS_ISOL')
     thisBin=0
     for edges in bins_edges:
         thisBin+=1
@@ -251,6 +366,8 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     ### draw shapes in each BDT region 
     thisBin=0
     zttshape=[]
+    ggfshape=[]
+    vbfshape=[]
     for edges in bins_edges:
         thisBin+=1
         vbf_field_hist, vbf_field_scale = vbf_00.get_field_hist(VARS, category)
@@ -260,21 +377,21 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
             vbf_field_hist, category, 'OS_ISOL',
             field_scale=vbf_field_scale,
             clf=clf,
-            scores=scores,
+            scores=vbfscores,
             min_score=edges[0],
             max_score=edges[1])
         ggf_00.draw_array(
             ggf_field_hist, category, 'OS_ISOL',
             field_scale=ggf_field_scale,
             clf=clf,
-            scores=scores,
+            scores=ggfscores,
             min_score=edges[0],
             max_score=edges[1])
         ztt_00.draw_array(
             ztt_field_hist, category, 'OS_ISOL',
             field_scale=ztt_field_scale,
             clf=clf,
-            scores=scores,
+            scores=zttscores,
             min_score=edges[0],
             max_score=edges[1])
         vbf = Hist(40, -30, 30, linewidth=3, linestyle='dashed', linecolor='blue')
@@ -287,6 +404,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
             if k=='o1':
                 vbf=h
                 vbf /= vbf.integral()
+                vbfshape.append(vbf)
         for k , h in ggf_field_hist.items():
             log.info('{0:1.2f} < score < {1:1.2f}: for ggf {2} = {3}'.format(
                     edges[0], edges[1], k, h.GetMean()))
@@ -294,6 +412,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
                 ggf=h
                 ggf.SetLineColor('black')
                 ggf /= ggf.integral()
+                ggfshape.append(ggf)
         for k , h in ztt_field_hist.items():
             log.info('{0:1.2f} < score < {1:1.2f}: for ztt {2} = {3}'.format(
                     edges[0], edges[1], k, h.GetMean()))
@@ -302,8 +421,10 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
                 ztt /= ztt.integral()            
                 zttshape.append(ztt)
         plot_bin(vbf,ggf,ztt,thisBin,category)
-        print 'zttshape', zttshape
-        plot_sample(zttshape[0],zttshape[1],zttshape[2],zttshape[3],zttshape[4],'ztautau',category)
+    print 'zttshape', zttshape
+    plot_sample(zttshape[0],zttshape[1],zttshape[2],zttshape[3],zttshape[4],'ztautau',category)
+    plot_dependence(zttshape[0],zttshape[1],zttshape[2],zttshape[3],zttshape[4], 'ztt', vbfshape[0],vbfshape[1],vbfshape[2],vbfshape[3],vbfshape[4],'vbf',category)
+    plot_dependence(ggfshape[0],ggfshape[1],ggfshape[2],ggfshape[3],ggfshape[4], 'ggf', vbfshape[0],vbfshape[1],vbfshape[2],vbfshape[3],vbfshape[4],'vbf',category)
 
 ### draw whole optobs comparison 
 with root_open('o1_hadhad_histos.root', 'recreate') as out:

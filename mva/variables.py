@@ -95,7 +95,7 @@ OBSERVABLES={
         'title': r'0$_{1}$',
         'root': '#font[152]{0_1}(#font[52]{Optimal Observable 1})',
         'filename': 'o1',
-        'binning': [-20,-5,-2.5,0,2.5,5,20],
+        'binning': [-15,-5,-2.5,0,2.5,5,15],
         'cats': ['2J', 'VBF'],
         'legend': 'left',
     },

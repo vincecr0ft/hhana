@@ -41,10 +41,20 @@ def draw_channel(channel, fit=None, no_data=False,
             log.debug("sample: {0} overallsys: {1} high: {2} low: {3}".format(
                 sample.name, sys_name, osys.high, osys.low))
         nominal_hist.systematics = _systematics
+        if len(sample.GetNormFactorList())>0:
+            for norm in sample.GetNormFactorList():
+                log.info('this sample has norm factors '+str(norm))
+        else:
+            log.info('sample has no norm factors')
         if sample.GetNormFactor('SigXsecOverSM') is not None:
             signal_hists.append(nominal_hist)
+            log.info('adding nominal signals')
+        elif sample.GetNormFactor('ATLAS_epsilon') is not None or sample.GetNormFactor('ATLAS_epsilon_rejected') is not None:
+            log.info('adding mixing signals')
+            signal_hists.append(nominal_hist)            
         else:
-            model_hists.append(nominal_hist)            
+            model_hists.append(nominal_hist)
+            log.info('adding nominal hists')            
     if 'systematics' in kwargs:
         del kwargs['systematics']
     figs = []
@@ -67,6 +77,7 @@ def draw_channel_array(
         region,
         cuts=None,
         mass=125,
+        mixings=0.0,
         mode=None,
         scale_125=False,
         ravel=False,
@@ -115,6 +126,7 @@ def draw_channel_array(
         category, region, cuts,
         include_signal=True,
         mass=mass,
+        mixings=mixings,
         mode=mode,
         scale_125=scale_125,
         clf=clf,

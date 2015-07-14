@@ -46,12 +46,15 @@ analysis = get_analysis(args)
 
 output_suffix = analysis.get_suffix()
 
+log.info('mixings in plot from args (after analysis) '+str(args.mixings))
+
 cat_defs = [args.categories]
 if args.categories != 'presel':
     cat_defs.append(args.controls)
 
 for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     if not category.name == 'vbf':
+        log.info("this category is "+str(category.name))
         continue
     else: print 'category is vbf'
 
@@ -69,7 +72,6 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     else:
         VARS = OBSERVABLES # formerly VARIABLES
         VARS.update(YEAR_VARIABLES[args.year])
-
     clf = None
     if not is_control:
         clf = analysis.get_clf(category, load=True, transform=True)
@@ -82,6 +84,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
         analysis,
         vars=VARS,
         mass=125,
+        mixings=args.mixings,
         mode='CP',
         signal_scale=(
             50 if is_control or 'preselection' in category.name else 1),
@@ -101,7 +104,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
         signal_on_top=True,
         stack_signal=False,
         clf=clf,
-        min_score=0.567454611796,#0.815967620756,#-0.0889747504412,
+        min_score=0.815967620756,#-0.0889747504412,#0.567454611796,
         no_data=args.no_data,
         #top_label="Fakes Model: {0}".format(analysis.fakes_region),
         )

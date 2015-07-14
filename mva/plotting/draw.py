@@ -210,10 +210,10 @@ def draw(name,
             prune_ratio_ticks=True)
     else:
         fig = SimplePlot(logy=logy)
-    nonVBF = [s for s in signal if 'gg' in s.GetTitle()]
-    signal = [s for s in signal if not 'gg' in s.GetTitle()]
+
     if signal is not None:
         if signal_scale != 1.:
+            log.info('scaling by '+str(signal_scale))
             scaled_signal = []
             for sig in signal:
                 scaled_h = sig * signal_scale
@@ -222,6 +222,7 @@ def draw(name,
                     sig.GetTitle()))
                 scaled_signal.append(scaled_h)
         else:
+            log.info('setting scaled signal=signal'+str(len(signal)))
             scaled_signal = signal
         if signal_colors is not None:
             set_colors(scaled_signal, signal_colors)
@@ -241,12 +242,30 @@ def draw(name,
                 else:
                     s.linestyle = 'solid'
                 alpha = 1.
+    else: print 'signal (in colours) is none'
+
+    nonVBF=[]
+    VBFsignal=[]
+    log.info('about to get signals')
+    if signal is not None:
+        for s in signal:
+            print 'got signal ',s.GetTitle()
+        nonVBF = [s for s in signal if 'gg' in s.GetTitle()]
+        for s in signal:
+            print 'in signal %s we have %f events'%(s.GetTitle(),s.Integral())
+        VBFsignal = [s for s in signal if not 'gg' in s.GetTitle()]
+        for s in VBFsignal:
+            print 'in signal %s we have %f events'%(s.GetTitle(),s.Integral())
+    else:
+        print "no signal"
+
 
     if not special_stack:
         if model is not None:
             if nonVBF is not None:
                 for ggf in nonVBF:
                     model.append(ggf)
+            else: print 'no nonVBF'
             if model_colors is not None:
                 set_colors(model, model_colors)
         # create the model stack
@@ -257,28 +276,33 @@ def draw(name,
                 model_stack.Add(hist)
             if signal is not None and signal_on_top:
                 if stack_signal:
-                    for s in scaled_signal:
+                    for s in VBFsignal:
                         model_stack.Add(s)                
             objects.append(model_stack)
+        else:
+            print 'model is none'
 
         if signal is not None and not signal_on_top:
             if stack_signal:
                 # create the signal stack
                 signal_stack = HistStack()
-                for hist in scaled_signal:
+                for hist in VBFsignal:
                     signal_stack.Add(hist)
                 objects.append(signal_stack)
             else:
-                objects.extend(scaled_signal)
+                objects.extend(VBFsignal)
     else:
+        print 'special stacking ',len(VBFsignal)
         if model is not None:
             if nonVBF is not None:
                 for ggf in nonVBF:
                     model.append(ggf)
+            else: print 'no nonVBF'
             if model_colors is not None:
                 set_colors(model, model_colors)
         # create the special stack
-            for s in scaled_signal:
+            for s in VBFsignal:
+                print 'stacking ',s.GetTitle()
                 sig_stack = HistStack()
                 for hist in model:
                     hist.SetLineWidth(0)
@@ -286,7 +310,7 @@ def draw(name,
                     sig_stack.Add(hist)
                 sig_stack.Add(s)                
                 objects.append(sig_stack)
-
+        else: print 'model is none'
 
     if model is not None:
         # draw uncertainty band

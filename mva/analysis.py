@@ -88,6 +88,7 @@ class Analysis(object):
         self.fakes_region = fakes_region
         self.suffix = suffix
         self.norm_field = norm_field
+        log.info("settings mixings "+str(mixings) )
         self.mixings = mixings
         print 'target region ',self.target_region
 
@@ -219,6 +220,7 @@ class Analysis(object):
         self.signals = self.get_signals(mass=125,mixing=mixings, mode='CP')
 
     def get_signals(self, mass=125, mixing=0.0, mode=None, scale_125=False):
+        log.info("getting signals for "+str(mode)+" with mixings "+str(mixing))
         signals = []
         if not isinstance(mass, list):
             mass = [mass]
@@ -249,7 +251,9 @@ class Analysis(object):
                     linecolor=col,
                     linewidth=2,
                     linestyle='solid',
-                    ggf_weight=self.ggf_weight)
+                    ggf_weight=self.ggf_weight,
+                    BSM = (True if m != 0.0 else False),
+                    SM = (True if m==0.0 else False))
                 if m != 0.0 and scale_125:
                     log.warning("SCALING SIGNAL TO 0.0")
                     log.info(str(s.mass))
@@ -472,7 +476,7 @@ class Analysis(object):
                           cuts=None,
                           include_signal=True,
                           mass=125,
-                          mixing=0.0,
+                          mixings=0.0,
                           mode=None,
                           scale_125=False,
                           clf=None,
@@ -507,6 +511,7 @@ class Analysis(object):
             if specified, it is a dictionary mapping the vars key to a tuple
             specifying the range to be replaced by s+b prediction.
         """
+        mixing=self.mixings
         # TODO: implement blinding
         log.info("constructing channels")
         samples = [self.data] + self.backgrounds
@@ -543,6 +548,8 @@ class Analysis(object):
                 uniform=uniform)
             histfactory_samples.append(field_sample)
 
+            if isinstance(s, Higgs):
+                log.info("got a higgle signal")
         field_channels = {}
         for field in vars.keys():
             # create channel for this mass point

@@ -465,7 +465,7 @@ def mixing_workspace(analysis, categories, masses, mixings,
                 cuts=cuts,
                 mass=125,
                 mixing=comparison,
-                min_score=0.567454611796,
+                min_score=0.567454611796,#0.815967620756,
                mode='CPworkspace',
                 systematics=systematics)['o1']
             if mixing not in channels:

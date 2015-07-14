@@ -500,11 +500,16 @@ class Sample(object):
                         shapesys.hist = high
                         sample.AddShapeSys(shapesys)
             if isinstance(self, Signal):
+                log.info('got signal sample')
 #                sample.AddNormFactor('SigXsecOverSM', 0., -200., 200., False)
                 if self.SM:
-                    sample.AddNormFactor('ATLAS_epsilon', 1., -200., 200., False)                    
+                    log.info('it is standard model')
+                    sample.AddNormFactor('ATLAS_epsilon', 1., -200., 200., False)               
                 elif self.BSM:
+                    log.info('it is NOT standard model')
                     sample.AddNormFactor('ATLAS_epsilon_rejected', 1., -200., 200., False)
+                else:
+                    log.info('it is NOT either standard model or bsm')
             if isinstance(self, Background): #formerly elif
                 # only activate stat error on background samples
                 sample.ActivateStatError()
