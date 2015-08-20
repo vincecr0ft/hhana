@@ -93,7 +93,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
             not ('preselection' in category.name) else None),
         category=category,
         region=target_region,
-        #systematics_components=args.systematics_components,
+#        systematics_components=args.systematics_components,
         output_formats=args.output_formats,
         weighted=not args.no_weight,
         plots=args.plots,

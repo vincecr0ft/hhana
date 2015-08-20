@@ -466,12 +466,24 @@ def mixing_workspace(analysis, categories, masses, mixings,
                 mass=125,
                 mixing=comparison,
                 min_score=0.567454611796,#0.815967620756,
-               mode='CPworkspace',
+                mode='CPworkspace',
                 systematics=systematics)['o1']
             if mixing not in channels:
                 channels[mixing] = {}
             channels[mixing][category.name] = channel
-    return channels, []
+        #get crs
+        scores, lowBDTchannel = analysis.clf_channels(clf,
+            category=category, 
+            region=analysis.target_region,
+            cuts=cuts,
+            mass=125,
+            mode='CPworkspace',
+            max_score=0.567454611796,
+            systematics=systematics,
+            bins=bins,
+            no_signal_fixes=True)
+                                   
+    return channels, [lowBDTchannel]
 
 
 

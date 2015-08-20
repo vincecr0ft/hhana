@@ -4,7 +4,7 @@ HHSTUDENT ?= hhskim
 # ntuple production directory
 HHNTUP ?= ntuples/prod_v29/hhskim
 # ntuple running directory
-HHNTUP_RUNNING ?= ntuples_hh/running/hhskim
+HHNTUP_RUNNING ?= /afs/cern.ch/user/v/vcroft/portal/hhskims/qskims
 # maximum number of processors to request in PBS
 PBS_PPN_MAX ?= 15
 
