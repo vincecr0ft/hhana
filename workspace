@@ -26,9 +26,8 @@ else:
     args.masses = map(int, args.masses.split(','))
 if args.type == 'weighted-mixing' or 'mixing':
     args.mixings = Higgs.MIXINGS
-    args.mixings = [0.02]
+    args.mixings = [-0.6]
 
-print 'mixings requested: ',args.mixings
 cuts = None
 if args.sideband:
     massregions = MassRegions()
@@ -63,7 +62,6 @@ else:
 
 years = args.years
 categories = args.categories
-print 'categories are now', categories
 if len(categories) == 1 and len(years) > 1:
     categories = categories * len(years)
 elif len(categories) != len(years):

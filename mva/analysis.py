@@ -690,7 +690,10 @@ class Analysis(object):
                      hybrid_data=False,
                      no_signal_fixes=False,
                      uniform=False,
-                     mva=False):
+                     mva=False,
+                     min_score=None,
+                     max_score=None,
+                     include_signal=True):
         """
         Return a HistFactory Channel for each mass hypothesis
         """
@@ -706,8 +709,10 @@ class Analysis(object):
         data_scores = scores_obj.data_scores
         bkg_scores = scores_obj.bkg_scores
         all_sig_scores = scores_obj.all_sig_scores
-        min_score = scores_obj.min_score
-        max_score = scores_obj.max_score
+        if min_score is None:
+            min_score = scores_obj.min_score
+        if max_score is None:
+            max_score = scores_obj.max_score
 
         if isinstance(bins, int):
             if limits is not None:
@@ -732,6 +737,7 @@ class Analysis(object):
             sample = s.get_histfactory_sample(
                 hist_template, clf,
                 category, region,
+                min_score=min_score, max_score=max_score ,
                 cuts=cuts, scores=scores,
                 systematics=systematics,
                 uniform=uniform,
@@ -764,19 +770,20 @@ class Analysis(object):
 
         # create signal HistFactory samples
         sig_samples = []
-        for s, scores in all_sig_scores[mass]:
-            hist_template = binning.Clone(
-                title=s.label,
-                **s.hist_decor)
-            sample = s.get_histfactory_sample(
-                hist_template, clf,
-                category, region,
-                cuts=cuts, scores=scores,
-                no_signal_fixes=no_signal_fixes,
-                systematics=systematics,
-                uniform=uniform,
-                mva=mva)
-            sig_samples.append(sample)
+        if include_signal:
+            for s, scores in all_sig_scores[mass]:
+                hist_template = binning.Clone(
+                    title=s.label,
+                    **s.hist_decor)
+                sample = s.get_histfactory_sample(
+                    hist_template, clf,
+                    category, region,
+                    cuts=cuts, scores=scores,
+                    no_signal_fixes=no_signal_fixes,
+                    systematics=systematics,
+                    uniform=uniform,
+                    mva=mva)
+                sig_samples.append(sample)
 
         # replace data in blind bins with signal + background
         if hybrid_data and (unblind is not True):
@@ -859,6 +866,52 @@ class Analysis(object):
         for s, rec in sig_recs.items():
             sig_arrs[s] = rec2array(rec)
         return bkg_arrs, sig_arrs
+
+    def make_clf_channel(self, clf, bins, cuts, categories, region,
+                          include_signal=False, masses=None,
+                          systematics=False, normalize=True):
+        if not include_signal:
+            channels = []
+            for category in categories:
+                parent_category = category.get_parent()
+                if normalize:
+                    # apply normalization
+                    self.normalize(parent_category)
+                # clf = analysis.get_clf(parent_category, load=True)
+                scores, contr = self.clf_channels(clf,
+                    category=category,
+                    region=region,
+                    cuts=cuts,
+                    mass=125,
+                    mode='CPworkspace',
+                    max_score=0.815967620756,#0.567454611796,                                     
+                    bins=bins,
+                    include_signal=False,
+                    systematics=systematics)
+                channels.append(contr)
+        else:
+            channels = {}
+            for category in categories:
+                parent_category = category.get_parent()
+                if normalize:
+                    # apply normalization
+                    self.normalize(parent_category)
+                # clf = analysis.get_clf(parent_category, load=True)
+                for mass in masses:
+                    scores, contr = self.clf_channels(clf,
+                                       category=category,
+                                       region=region,
+                                       cuts=cuts,
+                                       mass=125,
+                                       mode='CPworkspace',
+                                       max_score=0.815967620756,#0.567454611796,                                     
+                                       bins=bins,
+                                       include_signal=False,
+                                       systematics=systematics)
+                    if mass not in channels:
+                        channels[mass] = {}
+                    channels[mass][category.name] = contr
+        return channels
 
     def make_var_channels(self, hist_template, expr, categories, region,
                           include_signal=False, masses=None,
