@@ -27,7 +27,6 @@ class Ztautau(Background):
             print 'workspacenorm is false'
             return
         if self.workspace_norm is not None:
-            print 'not none'
             sample.AddNormFactor(
                 'ATLAS_norm_HH_{0:d}_Ztt'.format(self.year),
                 self.workspace_norm,

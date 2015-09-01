@@ -20,11 +20,14 @@ import os
 
 
 def write_workspaces(path, prefix, year_mass_category_channel,
-                     controls=None,
+                     controls=None, shapeControls=None,
                      silence=False):
     log.info("writing workspaces ...")
     if controls is None:
         controls = []
+    if shapeControls is None:
+        shapeControls = []
+
     if not os.path.exists(path):
         mkdir_p(path)
     for year, mass_category_channel in year_mass_category_channel.items():
@@ -40,6 +43,17 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                     mass_controls = controls[year]
             else:
                 mass_controls = controls
+            if isinstance(shapeControls, dict):
+                log.info("shapeControls are dicks")
+                if isinstance(shapeControls[year], dict):
+                    log.info("shapeControls by year are dicks")
+                    shape_controls = shapeControls[year][125].values()
+                else:
+                    log.info("shapeControls years are dicks")
+                    shape_controls = shapeControls[year]
+            else:
+                shape_controls = shapeControls
+
             channels = []
             # make workspace for each category
             # include the control region in each
@@ -59,7 +73,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
 
                 # print newname
                 measurement = histfactory.make_measurement(
-                    newname, [channel] + mass_controls,
+                    newname, [channel] + mass_controls + shape_controls,
                     POI=POI,
                     const_params=CONST_PARAMS)
                 workspace = histfactory.make_workspace(measurement, name=newname,
@@ -440,17 +454,6 @@ def mixing_workspace(analysis, categories, masses, mixings,
         sig_scores = scores.all_sig_scores[125]
         min_score = scores.min_score
         max_score = scores.max_score
-#        bkg_score_hist = Hist(clf_bins, type='D')
-#        sig_score_hist = bkg_score_hist.Clone()
-#        hist_scores(bkg_score_hist, bkg_scores)
-#        _bkg = bkg_score_hist.Clone()
-#        hist_scores(sig_score_hist, sig_scores)
-#        _sig = sig_score_hist.Clone()
-#        sob_hist = (1 + _sig / _bkg)
-#        _log = math.log
-#        for bin in sob_hist.bins(overflow=True):
-#            bin.value = _log(bin.value)
-#        log.info(str(list(sob_hist.y())))
 
         print "getting workspaces for ",mixings
         for mixing in mixings:
@@ -475,31 +478,19 @@ def mixing_workspace(analysis, categories, masses, mixings,
                 channels[mixing] = {}
             channels[mixing][category.name] = channel
         #get crs
-        bins = 10
-        shapeControls = analysis.make_clf_channel(
-            clf, bins, cuts,
-            CATEGORIES['mva_vbf'],
-            analysis.target_region,
-            include_signal=True, masses=masses,
-            systematics=systematics)
-
-#        scores, lowBDTchannel = analysis.clf_channels(clf,
-#            category=category, 
-#            region=analysis.target_region,
-#            cuts=cuts,
-#            mass=125,
-#            mode='CPworkspace',
-#            max_score=0.815967620756,#0.567454611796,
-#            systematics=systematics,
-#            bins=bins,
-#            no_signal_fixes=True)
-#        shapeControl={}
-#        shapeControl[125]={}
-#        shapeControl[125][category.name]=lowBDTchannel
         hist_template = Hist(5, 0, 1.5, type='D')
         controls = analysis.make_var_channels(
             hist_template, 'dEta_tau1_tau2',
             CATEGORIES['mva_workspace_controls'],
+            analysis.target_region,
+            include_signal=True, masses=masses,
+            systematics=systematics)
+
+        bins = 10
+        hist_template = Hist(10, -1, 0.815967620756, type='D')
+        shapeControls = analysis.make_var_channels(
+            hist_template, clf,
+            CATEGORIES['mva_vbf'],
             analysis.target_region,
             include_signal=True, masses=masses,
             systematics=systematics)
@@ -510,7 +501,7 @@ def mixing_workspace(analysis, categories, masses, mixings,
         print 'lowBDT is', type(shapeControls)
         print shapeControls
 #    return channels, controls, lowBDTchannel
-    return channels, controls#shapeControl
+    return channels, controls, shapeControls#shapeControl
 
 def mass2d_workspace(analysis, categories, masses,
                      systematics=False):

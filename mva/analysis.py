@@ -72,8 +72,8 @@ class Analysis(object):
                  fakes_region=FAKES_REGION,
                  decouple_qcd_shape=False,
                  coherent_qcd_shape=True,
-                 qcd_workspace_norm=False,
-                 ztt_workspace_norm=False,
+                 qcd_workspace_norm=None,
+                 ztt_workspace_norm=None,
                  constrain_norms=False,
                  qcd_shape_systematic=True,
                  random_mu=False,
@@ -97,7 +97,7 @@ class Analysis(object):
             self.ztautau = samples.Embedded_Ztautau(
                 year=year,
                 systematics=systematics,
-                workspace_norm=False,#ztt_workspace_norm,
+                workspace_norm=ztt_workspace_norm,
                 constrain_norm=constrain_norms,
                 color='#00A3FF')
         else:
@@ -105,7 +105,7 @@ class Analysis(object):
             self.ztautau = samples.MC_Ztautau(
                 year=year,
                 systematics=systematics,
-                workspace_norm=False,#ztt_workspace_norm,
+                workspace_norm=ztt_workspace_norm,
                 constrain_norm=constrain_norms,
                 color='#00A3FF')
 
@@ -192,7 +192,7 @@ class Analysis(object):
             shape_region=fakes_region,
             decouple_shape=decouple_qcd_shape,
             coherent_shape=coherent_qcd_shape,
-            workspace_norm=False,#qcd_workspace_norm,
+            workspace_norm=qcd_workspace_norm,
             constrain_norm=constrain_norms,
             shape_systematic=qcd_shape_systematic,
             color='#00FF00')
@@ -878,14 +878,21 @@ class Analysis(object):
                     # apply normalization
                     self.normalize(parent_category)
                 # clf = analysis.get_clf(parent_category, load=True)
-                scores, contr = self.clf_channels(clf,
+#                scores, contr = self.clf_channels(clf,
+#                    category=category,
+#                    region=region,
+#                    cuts=cuts,
+#                    mass=125,
+#                    mode='CPworkspace',
+#                    max_score=0.815967620756,#0.567454611796,                                     
+#                    bins=bins,
+#                    include_signal=False,
+#                    systematics=systematics)
+#                channels.append(contr)
+                contr = self.get_channel(hist_template, clf,
                     category=category,
                     region=region,
-                    cuts=cuts,
-                    mass=125,
-                    mode='CPworkspace',
-                    max_score=0.815967620756,#0.567454611796,                                     
-                    bins=bins,
+                    #cuts=signal_region,
                     include_signal=False,
                     systematics=systematics)
                 channels.append(contr)
@@ -898,16 +905,14 @@ class Analysis(object):
                     self.normalize(parent_category)
                 # clf = analysis.get_clf(parent_category, load=True)
                 for mass in masses:
-                    scores, contr = self.clf_channels(clf,
-                                       category=category,
-                                       region=region,
-                                       cuts=cuts,
-                                       mass=125,
-                                       mode='CPworkspace',
-                                       max_score=0.815967620756,#0.567454611796,                                     
-                                       bins=bins,
-                                       include_signal=False,
-                                       systematics=systematics)
+                    contr = self.get_channel(hist_template, clf,
+                        category=category,
+                        region=region,
+                        #cuts=signal_region,
+                        include_signal=True,
+                        mass=mass,
+                        mode='workspace',
+                        systematics=systematics)
                     if mass not in channels:
                         channels[mass] = {}
                     channels[mass][category.name] = contr

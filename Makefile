@@ -354,6 +354,11 @@ mva-workspaces:
 			PBS_LOG=log PBS_MEM=18gb run-cluster ./workspace mva --systematics --unblind --years $${year} --masses $${mass} --clf-mass 125; \
 		done; \
 	done
+#	@for mixing in -0.60 -0.50 -0.40 -0.30 -0.20 -0.10 -0.07 -0.05 -0.02 0.00 0.02 0.05 0.07 0.10 0.20 0.30 0.40 0.50 0.60; do \
+
+.PHONY: mixing-workspaces
+mixing-workspaces:
+	@bsub bmixing.sh
 
 .PHONY: mva-workspaces-binning-test
 mva-workspaces-binning-test:
