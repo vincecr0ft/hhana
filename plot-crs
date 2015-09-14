@@ -1,0 +1,175 @@
+#!/usr/bin/env python
+"""
+This is the main driver script for the analysis
+"""
+from mva.cmd import get_parser
+
+args = get_parser(actions=False).parse_args()
+year = args.year
+
+# stdlib imports
+import math
+
+# rootpy imports
+from rootpy.io import root_open
+from rootpy.tree import Cut
+from rootpy.plotting import Canvas, Hist, Legend
+
+# local imports
+from mva import log, variables, MMC_MASS, plot_dir
+from mva.plotting import draw_channel_array, draw_channel, hist_scores, draw_ratio
+from mva.classify import histogram_scores
+from mva.systematics import get_systematics, parse_systematics
+from mva.categories import CATEGORIES
+from mva.massregions import MassRegions
+from mva.analysis import get_analysis
+from mva.defaults import TARGET_REGION
+from mva.variables import OBSERVABLES, VARIABLES, YEAR_VARIABLES, get_label
+from statstools.histfactory import uniform_channel
+from statstools.utils import efficiency_cut
+
+for category in CATEGORIES['mva_workspace_controls']:
+    restcr= category
+
+
+SYSTEMATICS = get_systematics(year)
+args.systematics_components = parse_systematics(args.systematics_components)
+systematics = SYSTEMATICS if args.systematics else None
+
+mass_regions = MassRegions(
+    low=args.low_mass_cut,
+    high=args.high_mass_cut,
+    high_sideband_in_control=args.high_sideband_in_control,
+    mass_window_signal_region=False, #args.no_mmc,
+    # not enough events to only train in signal region
+    train_signal_region=False)
+
+control_region = mass_regions.control_region
+signal_region = mass_regions.signal_region
+#signal_region = control_region # for creating control workspaces
+train_region = mass_regions.train_region
+
+categories = CATEGORIES['mva_vbf']
+category_names = args.category_names
+
+analysis = get_analysis(args)
+
+target_region = analysis.target_region
+region = target_region
+output_suffix = analysis.get_suffix()
+
+cat_defs = [args.categories]
+if args.categories != 'presel':
+    cat_defs.append(args.controls)
+
+UNBLIND = {
+    2012: {
+        'vbf': 3,
+        'boosted': 1},
+    2011: {
+        'vbf': 2,
+        'boosted': 2}
+}
+
+
+def plot_bdt(category, workspace_binning=False):
+    # create BDT validation plots
+    clf = analysis.get_clf(category, load=True, mass=125, transform=True)
+    suffix = clf.output_suffix
+
+    if workspace_binning:
+        bins = clf.binning(analysis.year)
+        suffix += '_workspace_binning'
+        unblind_bins = UNBLIND[year][category.name]
+    else:
+        bins = 6
+        unblind_bins = 0.
+    if args.unblind:
+        suffix += '_unblind'
+
+    signal_scale=20.
+    region = TARGET_REGION
+       
+    if args.plot_expr is not None:
+        VARS = {
+            tuple(args.plot_expr.split(',')): {
+                'title': args.plot_name,
+                'range': (args.plot_min, args.plot_max),
+                'bins': args.plot_bins,
+                'filename': 'expr_' + args.plot_name.replace(' ', '_')}}
+    else:
+        VARS = VARIABLES
+        VARS.update(YEAR_VARIABLES[args.year])
+
+    cuts = Cut(args.plot_cut)
+    figs = draw_channel_array(
+        analysis,
+        vars=VARS,
+        plots=['dEta_tau1_tau2'],
+        mass=125,
+        mixings=args.mixings,
+        mode='CP',
+        plot_label=('Rest Control Region'),
+        category=restcr,
+        region=target_region,
+        output_formats=args.output_formats,
+        weighted=not args.no_weight,
+        output_suffix=output_suffix,
+        unblind=args.unblind,  # or is_control,
+        cuts=cuts,
+        show_ratio=args.show_ratio,
+        signal_on_top=True,
+        stack_signal=False,
+        clf=clf,
+        no_data=args.no_data,
+        legend_position='right'
+        )
+
+    ###################################################################
+    # show the background model and 125 GeV signal in the signal region
+    log.info("plotting classifier output in the signal region ...")
+
+    scores, channel = analysis.clf_channels(clf,
+        category, region, cuts=signal_region,
+        mass=125,
+        mode='combined',
+        systematics=systematics,
+        bins=bins,
+        max_score=0.2,#0.815967620756,
+        unblind=args.unblind or unblind_bins,
+        no_signal_fixes=True)
+
+    bkg_scores = scores.bkg_scores
+    sig_scores = scores.all_sig_scores[125]
+    min_score = scores.min_score
+    max_score = scores.max_score
+
+    draw_channel(
+        channel,
+        category=category,
+        plot_label="low BDT Score",
+        #plot_label='Mass Signal Region' if signal_region else None,
+        signal_scale=1.,
+        signal_on_top=True,
+        #fill_signal=True if args.unblind else False,
+        data_info=str(analysis.data.info),
+        output_name='event_bdt_score_signal_region' + suffix,
+        name='BDT score',
+        ypadding=(0.4, 0.),
+        log_ypadding=(0.5, 0.1),
+        #range=(-1, 1),
+        systematics=systematics,
+        output_formats=args.output_formats,
+        show_ratio=True,
+        output_dir=plot_dir('bdt'))
+
+
+for category in categories:
+    
+
+    if category.analysis_control:
+        continue
+
+    for workspace_binning in (True, False):
+        plot_bdt(category, workspace_binning=workspace_binning)
+    continue
