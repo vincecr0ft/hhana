@@ -188,7 +188,7 @@ class Higgs(MC, Signal):
             str_mode = 'V'
             name += '_%s' % str_mode
         elif len(modes) == 3 and set(modes) == set(['W', 'Z', 'gg']):
-            str_mode = 'gg/V'
+            str_mode = 'gg+V'
             name += '_%s' % str_mode
             isNonVBF=True
 
@@ -292,10 +292,10 @@ class Higgs(MC, Signal):
                 'histfactory sample only valid for single mass point')
 
         # isolation systematic
-        sample.AddOverallSys(
-            'ATLAS_ANA_HH_{0:d}_Isolation'.format(self.year),
-            1. - 0.06,
-            1. + 0.06)
+#        sample.AddOverallSys(
+#            'ATLAS_ANA_HH_{0:d}_Isolation'.format(self.year),
+#            1. - 0.06,
+#            1. + 0.06)
 
         mode = self.modes[0]
 

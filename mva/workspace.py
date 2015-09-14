@@ -22,7 +22,7 @@ import os
 def write_workspaces(path, prefix, year_mass_category_channel,
                      controls=None, shapeControls=None,
                      silence=False):
-    log.info("writing workspaces ...")
+    log.info("writing workspaces ... for {0}".format(str(year_mass_category_channel)))
     if controls is None:
         controls = []
     if shapeControls is None:
@@ -37,7 +37,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                 log.info("controls are dicks")
                 if isinstance(controls[year], dict):
                     log.info("controls by year are dicks")
-                    mass_controls = controls[year][125].values()
+                    mass_controls = controls[year][mass].values()
                 else:
                     log.info("controls years are dicks")
                     mass_controls = controls[year]
@@ -47,13 +47,14 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                 log.info("shapeControls are dicks")
                 if isinstance(shapeControls[year], dict):
                     log.info("shapeControls by year are dicks")
-                    shape_controls = shapeControls[year][125].values()
+                    shape_controls = shapeControls[year][mass].values()
                 else:
                     log.info("shapeControls years are dicks")
                     shape_controls = shapeControls[year]
             else:
                 shape_controls = shapeControls
 
+            log.info("comparing {0} with {1}".format(str(mass_controls),str(shape_controls)))
             channels = []
             # make workspace for each category
             # include the control region in each
@@ -63,8 +64,6 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                 name = "{0}_{1}_{2}_{3}".format(
                     prefix, year % 1000, category, mass)
                 log.info("writing {0} ...".format(name))
-                # make workspace
-                # print 'name coming in here ',name,' goes to...'
                 if mass<0.:
                     parity='m'
                 else:
@@ -88,7 +87,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                         xml_path=os.path.join(path, newname),
                         silence=silence)
                 channels.append(channel)            
-            print 'length of channels ',len(channels)
+            log.info("length of channels is {0}".format(str(len(channels))))
             # make combined workspace
 """
             name = "{0}_{1}_combination_{2}".format(prefix, year % 1000, mass)
@@ -414,7 +413,7 @@ def weighted_mixing_workspace(analysis, categories, masses, mixings,
             bin.value = _log(bin.value)
         log.info(str(list(sob_hist.y())))
 
-        print "getting workspaces for ",mixings
+        log.info("getting workspaces for {0}".format(str(mixings)))
         for mixing in mixings:
             if not mixing==0.0:
                 comparison=[0.0,mixing]
@@ -429,7 +428,7 @@ def weighted_mixing_workspace(analysis, categories, masses, mixings,
                 clf=clf,
                 cuts=cuts,
                 mass=125,
-                mixing=comparison,
+                mixings=comparison,
                 mode='CPworkspace',
                 systematics=systematics)['o1']
             if mixing not in channels:
@@ -437,71 +436,72 @@ def weighted_mixing_workspace(analysis, categories, masses, mixings,
             channels[mixing][category.name] = channel
     return channels, []
 
-def mixing_workspace(analysis, categories, masses, mixings,
+def mixing_workspace(analysis, categories, masses, mixings=None,
                             systematics=False,
                             cuts=None):
-    hist_template = Hist([-15,-5,-2.5,0,2.5,5,15], type='D')
+    hist_template = Hist([-15,-3.5,-1.5,0,1.5,3.5,15], type='D')
     channels = {}
+    print "mixings now",mixings
+    log.info("mixings have become {0}".format(mixings))
     for category in analysis.iter_categories(categories):
+        log.info("mixing workspace for category {0}".format(category.name))
         clf = analysis.get_clf(category, load=True, mass=125)
         clf_bins = clf.binning(analysis.year, overflow=1E5)
-        scores = analysis.get_scores(
-            clf, category, analysis.target_region,
-            masses=[125], mode='CP',
-            systematics=False,
-            unblind=True)
-        bkg_scores = scores.bkg_scores
-        sig_scores = scores.all_sig_scores[125]
-        min_score = scores.min_score
-        max_score = scores.max_score
-
-        print "getting workspaces for ",mixings
+        log.info("getting workspaces for {0}".format(str(mixings)))
+        controls = {}
+        shapeControls = {}
         for mixing in mixings:
             if not mixing==0.0:
                 comparison=[0.0,mixing]
             else:
                 comparison=[0.0]
+            log.info("this comparison is {0}".format(str(comparison)))
             channel = analysis.get_channel_array(
                 {'o1': hist_template},
                 category=category,
                 region=analysis.target_region,
                 include_signal=True,
-#                weight_hist=sob_hist,
                 clf=clf,
                 cuts=cuts,
                 mass=125,
                 mixings=comparison,
-                min_score=0.815967620756,#0.567454611796,
+                min_score=0.815967620756,#0.567454611796
                 mode='CPworkspace',
                 systematics=systematics)['o1']
             if mixing not in channels:
-                channels[mixing] = {}
+                channels[mixing] = {}                
             channels[mixing][category.name] = channel
-        #get crs
-        hist_template = Hist(5, 0, 1.5, type='D')
-        controls = analysis.make_var_channels(
-            hist_template, 'dEta_tau1_tau2',
-            CATEGORIES['mva_workspace_controls'],
-            analysis.target_region,
-            include_signal=True, masses=masses,
-            systematics=systematics)
+            log.info("got SR moving in for CRs")
 
-        bins = 10
-        hist_template = Hist(10, -1, 0.815967620756, type='D')
-        shapeControls = analysis.make_var_channels(
-            hist_template, clf,
-            CATEGORIES['mva_vbf'],
-            analysis.target_region,
-            include_signal=True, masses=masses,
-            systematics=systematics)
+            #get crs
+            cr_template = Hist(5, 0, 1.5, type='D')
+            control = analysis.make_var_channels(
+                cr_template, 'dEta_tau1_tau2',
+                CATEGORIES['mva_workspace_controls'],
+                analysis.target_region,
+                mixings=comparison,
+                mode='CPworkspace',
+                include_signal=True, masses=masses,
+                systematics=systematics)
+            if mixing not in controls:
+                controls[mixing] = {}
+            controls[mixing] = control[125]
 
-        print 'typetypetypetypetypetypes'
-        print 'controls are type',type(controls)
-        print controls
-        print 'lowBDT is', type(shapeControls)
-        print shapeControls
-#    return channels, controls, lowBDTchannel
-    return channels, controls, shapeControls#shapeControl
+            bins = 10
+            scr_template = Hist(8, -1, 0.6, type='D')
+            shapeControl = analysis.make_var_channels(
+                scr_template, clf,
+                CATEGORIES['mva_vbf'],
+                analysis.target_region,
+                mixings=comparison,
+                mode='CPworkspace',
+                include_signal=True, masses=masses,
+                systematics=systematics)
+            if mixing not in shapeControls:
+                shapeControls[mixing] = {}
+            shapeControls[mixing] = shapeControl[125]
+
+    return channels, controls, shapeControls
 
 def mass2d_workspace(analysis, categories, masses,
                      systematics=False):

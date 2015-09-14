@@ -22,8 +22,8 @@ def get_label(name, units=True, latex=False):
 
 
 def get_binning(name, category, year):
-#    binning = VARIABLES[name]['binning']
-    binning = OBSERVABLES[name]['binning']
+    binning = VARIABLES[name]['binning']
+#    binning = OBSERVABLES[name]['binning']
     if isinstance(binning, dict):
         if year in binning:
             binning = binning[year]
@@ -95,9 +95,9 @@ OBSERVABLES={
         'title': r'0$_{1}$',
         'root': '#font[152]{0_1}(#font[52]{Optimal Observable 1})',
         'filename': 'o1',
-        'binning': [-15,-5,-2.5,0,2.5,5,15],
+        'binning': [-15,-3.5,-1.5,0,1.5,3.5,15],
         'cats': ['2J', 'VBF'],
-        'legend': 'left',
+        'legend': 'right',
     },
     'dphi': {
         'title': r'dPhi$_{jj}$',
@@ -110,6 +110,22 @@ OBSERVABLES={
 }
 
 VARIABLES = {
+    'o1': {
+        'title': r'0$_{1}$',
+        'root': '#font[152]{0_1}(#font[52]{Optimal Observable 1})',
+        'filename': 'o1',
+        'binning': [-15,-3.5,-1.5,0,1.5,3.5,15],
+        'cats': ['2J', 'VBF'],
+        'legend': 'right',
+    },
+    'dphi': {
+        'title': r'dPhi$_{jj}$',
+        'root': '#font[152]{dY}jj(#font[52]{sign delta phi})',
+        'filename': 'dphi',
+        'binning': [-5,-3.2,-2.4,-1.6,-0.8,0,0.8,1.6,2.4,3.2,5,5.1],
+        'cats': ['2J', 'VBF'],
+        'legend': 'left',
+    },
     #'ntrack_pv': {
     #    'title': r'Number of Tracks from the Primary Vertex',
     #    'root': '#font[52]{Number of Tracks from the Primary Vertex}',
@@ -470,6 +486,7 @@ VARIABLES = {
             'REST': (10, 0, 1.5),
             None: (10, 0, 2.5)},
         'ypadding': (0.5, 0),
+        'legend': 'right',
     },
     #'tau1_charge': {
     #    'title': r'$\tau_1$ Charge',

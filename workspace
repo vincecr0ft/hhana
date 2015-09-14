@@ -8,6 +8,7 @@ from mva.workspace import (
     feature_workspace, weighted_mass_workspace, weighted_mixing_workspace, mixing_workspace, weighted_mass_cba_workspace)
 from mva.analysis import get_analysis
 from mva.massregions import MassRegions
+from mva import log; log = log[__name__]
 
 parser = cmd.analysis_parser(cmd.general_parser(
     multi_years=True, multi_categories=True))
@@ -26,10 +27,11 @@ else:
     args.masses = map(int, args.masses.split(','))
 
 if args.type == 'weighted-mixing' or 'mixing':
-    if args.mixings is None:
+    if args.mixings is None or args.mixings == [0.0]:
         args.mixings = Higgs.MIXINGS
 #    args.mixings = [-0.6]
-
+d_tilde=args.mixings
+log.info("args.mixings are {0}".format(args.mixings))
 cuts = None
 if args.sideband:
     massregions = MassRegions()
@@ -72,16 +74,18 @@ elif len(categories) != len(years):
 signal_regions = {}
 control_regions = {}
 shape_control = {}
+log.info("about to enter main loop")
 for year, year_categories in zip(years, categories):
+    log.info("for year {0} and category {1}".format(str(year),year_categories))
     analysis = get_analysis(args, year=year)
     sr, cr, scr = workspace_func(analysis=analysis,
                             categories=year_categories,
                             masses=args.masses,
-                            mixings=args.mixings,
+                            mixings=d_tilde,
                             systematics=args.systematics,
                             cuts=cuts,
                             **params)
-    print "got signal regions ",sr
+    log.info("got signal regions {0}".format(str(sr)))
     signal_regions[year] = sr
     control_regions[year] = cr
     shape_control[year] = scr
@@ -96,5 +100,6 @@ if args.sideband:
 if args.output_suffix:
     suffix += '_' + args.output_suffix
 path = 'workspaces/hh{0}'.format(suffix.lower())
+log.info("about to write workspaces")
 write_workspaces(path, 'hh', signal_regions, controls=control_regions, shapeControls=shape_control)
 

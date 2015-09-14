@@ -70,7 +70,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
                 'bins': args.plot_bins,
                 'filename': 'expr_' + args.plot_name.replace(' ', '_')}}
     else:
-        VARS = OBSERVABLES # formerly VARIABLES
+        VARS = VARIABLES # formerly OBSERVABLES
         VARS.update(YEAR_VARIABLES[args.year])
     clf = None
     if not is_control:
@@ -83,6 +83,7 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
     figs = draw_channel_array(
         analysis,
         vars=VARS,
+        plots=['o1'],
         mass=125,
         mixings=args.mixings,
         mode='CP',
@@ -96,7 +97,6 @@ for category in analysis.iter_categories(*cat_defs, names=args.category_names):
 #        systematics_components=args.systematics_components,
         output_formats=args.output_formats,
         weighted=not args.no_weight,
-        plots=args.plots,
         output_suffix=output_suffix,
         unblind=args.unblind,  # or is_control,
         cuts=cuts,

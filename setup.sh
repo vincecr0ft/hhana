@@ -15,14 +15,15 @@ DIR_HIGGSTAUTAU_MVA_SETUP="$( cd -P "$( dirname "$SOURCE_HIGGSTAUTAU_MVA_SETUP" 
 
 echo "sourcing ${SOURCE_HIGGSTAUTAU_MVA_SETUP}..."
 
-export HIGGSTAUTAU_NTUPLE_DIR=${DIR_HIGGSTAUTAU_MVA_SETUP}/ntuples
+#export HIGGSTAUTAU_NTUPLE_DIR=${DIR_HIGGSTAUTAU_MVA_SETUP}/ntuples
+export HIGGSTAUTAU_NTUPLE_DIR=/glusterfs/atlas1/users/vcroft/higgsSamples
 export HIGGSTAUTAU_PLOTS_DIR=${DIR_HIGGSTAUTAU_MVA_SETUP}/plots
 export HIGGSTAUTAU_MVA_DIR=$DIR_HIGGSTAUTAU_MVA_SETUP
 export PYTHONPATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PYTHONPATH:+:$PYTHONPATH}
 # Add LHAPDFs
-export PATH=/afs/cern.ch/user/v/vcroft/htautau/local/bin:$PATH
-export LD_LIBRARY_PATH=/afs/cern.ch/user/v/vcroft/htautau/local/lib:$LD_LIBRARY_PATH
-export PYTHONPATH=/afs/cern.ch/user/v/vcroft/htautau/local/lib/python2.7/site-packages:$PYTHONPATH
+export PATH=/project/atlas/users/vcroft/htautau/local/bin:$PATH
+export LD_LIBRARY_PATH=/project/atlas/users/vcroft/htautau/local/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=/project/atlas/users/vcroft/htautau/local/lib/python2.7/site-packages:$PYTHONPATH
 export PATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PATH:+:$PATH}
 
 if [ -f ${DIR_HIGGSTAUTAU_MVA_SETUP}/../hhntup/setup.sh ]

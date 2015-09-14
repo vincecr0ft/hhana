@@ -72,8 +72,8 @@ class Analysis(object):
                  fakes_region=FAKES_REGION,
                  decouple_qcd_shape=False,
                  coherent_qcd_shape=True,
-                 qcd_workspace_norm=None,
-                 ztt_workspace_norm=None,
+                 qcd_workspace_norm=None,#False
+                 ztt_workspace_norm=None,#False
                  constrain_norms=False,
                  qcd_shape_systematic=True,
                  random_mu=False,
@@ -321,8 +321,7 @@ class Analysis(object):
                         s.scale *= sf
                     signals.append(s)
         elif mode == 'CPworkspace':
-            print 'in CPworkspace'
-            print 'with mixing ',mixing
+            log.info('in CPworkspace with mixing {0}'.format(str(mixing)))
             if (len(mixing)==1 and mixing==[0.0]) or mixing == 0.0: 
                 signals.append(samples.Higgs(
                     year=self.year,
@@ -333,7 +332,7 @@ class Analysis(object):
                     scale=self.mu,
                     ggf_weight=self.ggf_weight,
                     BSM=True))
-                print "adding a BSM d_tilde=0"
+                log.info("adding a BSM d_tilde=0")
             for m in mixing:
                 s = samples.Higgs(
                     year=self.year,
@@ -431,6 +430,7 @@ class Analysis(object):
                     include_signal=True,
                     mass=125,
                     mode=None,
+                    mixings=0.0,
                     clf=None,
                     min_score=None,
                     max_score=None,
@@ -449,7 +449,7 @@ class Analysis(object):
             else:
                 suffix = '_%d' % mass
             channel_name += suffix
-            samples += self.get_signals(mass, self.mixings, mode)
+            samples += self.get_signals(mass, mixings, mode)
 
         # create HistFactory samples
         histfactory_samples = []
@@ -492,6 +492,7 @@ class Analysis(object):
                           ravel=True,
                           uniform=False,
                           hybrid_data=None):
+        log.info("in get channel array {0}".format(str(mixings)))
         """
         Return a dictionnary of histfactory channels for different variables
         (i.e. {'MMC_MASS':channel1, ...}).
@@ -511,7 +512,7 @@ class Analysis(object):
             if specified, it is a dictionary mapping the vars key to a tuple
             specifying the range to be replaced by s+b prediction.
         """
-        mixing=self.mixings
+        mixing=mixings
         # TODO: implement blinding
         log.info("constructing channels")
         samples = [self.data] + self.backgrounds
@@ -523,6 +524,7 @@ class Analysis(object):
             else:
                 suffix = '_%d' % mass
             channel_name += suffix
+            log.info("about to get signals with mixing of {0}".format(mixing))
             samples += self.get_signals(mass, mixing, mode, scale_125=scale_125)
 
         # create HistFactory samples
@@ -919,7 +921,7 @@ class Analysis(object):
         return channels
 
     def make_var_channels(self, hist_template, expr, categories, region,
-                          include_signal=False, masses=None,
+                          include_signal=False, masses=None, mode='workpace', mixings=0.0,
                           systematics=False, normalize=True):
         if not include_signal:
             channels = []
@@ -952,8 +954,9 @@ class Analysis(object):
                         #clf=clf,
                         #cuts=signal_region,
                         include_signal=True,
+                        mixings=mixings,                                           
                         mass=mass,
-                        mode='workspace',
+                        mode=mode,
                         systematics=systematics)
                     if mass not in channels:
                         channels[mass] = {}

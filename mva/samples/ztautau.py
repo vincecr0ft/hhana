@@ -19,14 +19,14 @@ class Ztautau(Background):
 
     def histfactory(self, sample, category, systematics=False, **kwargs):
         # isolation systematic
-        sample.AddOverallSys(
-            'ATLAS_ANA_HH_{0:d}_Isolation'.format(self.year),
-            1. - 0.06,
-            1. + 0.06)
+#        sample.AddOverallSys(
+#            'ATLAS_ANA_HH_{0:d}_Isolation'.format(self.year),
+#            1. - 0.06,
+#            1. + 0.06)
         if self.workspace_norm is False:
             print 'workspacenorm is false'
             return
-        if self.workspace_norm is not None:
+        elif self.workspace_norm is not None:
             sample.AddNormFactor(
                 'ATLAS_norm_HH_{0:d}_Ztt'.format(self.year),
                 self.workspace_norm,
