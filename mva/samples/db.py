@@ -33,6 +33,7 @@ def get_file(ntuple_path=NTUPLE_PATH, student=DEFAULT_STUDENT, hdf=False, suffix
     else:
         student_file = root_open(file_path, 'READ')
     FILES[filename] = student_file
+    log.info("got files")
     return student_file
 
 

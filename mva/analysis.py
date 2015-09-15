@@ -90,7 +90,6 @@ class Analysis(object):
         self.norm_field = norm_field
         log.info("settings mixings "+str(mixings) )
         self.mixings = mixings
-        print 'target region ',self.target_region
 
         if use_embedding:
             log.info("Using embedded Ztautau")
@@ -334,6 +333,7 @@ class Analysis(object):
                     BSM=True))
                 log.info("adding a BSM d_tilde=0")
             for m in mixing:
+                log.info('initialising {0} higgle'.format(m))
                 s = samples.Higgs(
                     year=self.year,
                     mode='VBF',
@@ -341,11 +341,15 @@ class Analysis(object):
                     mixing=m, #formerly m
                     systematics=self.systematics,
                     scale=self.mu,
-                    ggf_weight=self.ggf_weight)
-                if m == 0.0:
-                    s.SM=True
+                    ggf_weight=self.ggf_weight,
+                    SM=(True if m==0.0 else None),
+                    BSM=(True if m!=0.0 else None))
+                if m == 0.0:                    
+                    assert s.SM
+                    log.info('has SM tag')
                 else:
-                    s.BSM=True
+                    assert s.BSM
+                    log.info('has BSM tag')
                 signals.append(s)
         elif mode is None:
             for m in mixing:
@@ -449,7 +453,8 @@ class Analysis(object):
             else:
                 suffix = '_%d' % mass
             channel_name += suffix
-            samples += self.get_signals(mass, mixings, mode)
+            log.info("in get_channel signaling your higgle with mode {0} and mixing {1}".format(mode,mixings))
+            samples += self.get_signals(mass=mass, mixing=mixings, mode=mode)
 
         # create HistFactory samples
         histfactory_samples = []
@@ -493,6 +498,7 @@ class Analysis(object):
                           uniform=False,
                           hybrid_data=None):
         log.info("in get channel array {0}".format(str(mixings)))
+        log.info("with mode {0}".format(str(mode)))
         """
         Return a dictionnary of histfactory channels for different variables
         (i.e. {'MMC_MASS':channel1, ...}).
@@ -525,7 +531,7 @@ class Analysis(object):
                 suffix = '_%d' % mass
             channel_name += suffix
             log.info("about to get signals with mixing of {0}".format(mixing))
-            samples += self.get_signals(mass, mixing, mode, scale_125=scale_125)
+            samples += self.get_signals(mass=mass, mixing=mixing, mode=mode, scale_125=scale_125)
 
         # create HistFactory samples
         histfactory_samples = []

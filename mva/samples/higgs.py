@@ -136,6 +136,7 @@ class Higgs(MC, Signal):
                  SM=False,
                  BSM=False,
                  **kwargs):
+        log.info("initialising Higgle signal in mode {0} or modes {1}".format(mode,modes))
         self.inclusive_decays = inclusive_decays
         if masses is None:
             if mass is not None:
@@ -177,6 +178,11 @@ class Higgs(MC, Signal):
 
         self.SM=SM
         self.BSM=BSM
+        
+        if SM or BSM:
+            log.info("initialising with SM or BSM tag")
+        else:
+            log.info("info passed to sample/higgs wrong")
 
         name = 'Signal'
         isNonVBF=False
@@ -292,10 +298,10 @@ class Higgs(MC, Signal):
                 'histfactory sample only valid for single mass point')
 
         # isolation systematic
-#        sample.AddOverallSys(
-#            'ATLAS_ANA_HH_{0:d}_Isolation'.format(self.year),
-#            1. - 0.06,
-#            1. + 0.06)
+        sample.AddOverallSys(
+            'ATLAS_ANA_HH_{0:d}_Isolation'.format(self.year),
+            1. - 0.06,
+            1. + 0.06)
 
         mode = self.modes[0]
 
@@ -352,13 +358,13 @@ class Higgs(MC, Signal):
 
         #mixing Norms
         if self.SM:
-            print 'adding norm factor'
+            log.info('adding norm factor')
             sample.AddNormFactor('ATLAS_epsilon', 1., -200., 200., False)
         elif self.BSM:
-            print 'adding norm factor'
+            log.info('adding norm factor')
             sample.AddNormFactor('ATLAS_epsilon_rejected', 1., -200., 200., False)
         else:
-            print 'no norms for ',self.name
+            log.info('no norms for {0}'.format(self.name))
 
 
 

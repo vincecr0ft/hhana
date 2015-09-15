@@ -43,6 +43,9 @@ ROOT.SetSignalPolicy(ROOT.kSignalFast)
 if not os.getenv('MVA_NO_BATCH', False):
     ROOT.gROOT.SetBatch(True)
     log.info("ROOT is in batch mode")
+else:
+    ROOT.gROOT.SetBatch(False)
+    log.info("ROOT batch mode overide")
 
 from rootpy.utils.path import mkdir_p
 

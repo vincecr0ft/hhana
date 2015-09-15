@@ -518,11 +518,11 @@ class Sample(object):
                 sample.SetNormalizeByTheory(norm_by_theory)
                 if norm_by_theory:
                     lumi_uncert = get_lumi_uncert(self.year)
-#                    lumi_sys = histfactory.OverallSys(
-#                        'ATLAS_LUMI_{0:d}'.format(self.year),
-#                        high=1. + lumi_uncert,
-#                        low=1. - lumi_uncert)
-#                    sample.AddOverallSys(lumi_sys)
+                    lumi_sys = histfactory.OverallSys(
+                        'ATLAS_LUMI_{0:d}'.format(self.year),
+                        high=1. + lumi_uncert,
+                        low=1. - lumi_uncert)
+                    sample.AddOverallSys(lumi_sys)
                     if (self.year == 2012 and
                             do_systematics and category.name in BCH_UNCERT):
                         bch_uncert = BCH_UNCERT[category.name]
@@ -534,8 +534,11 @@ class Sample(object):
             # HACK: disable calling this on signal for now since while plotting
             # we only want to show the combined signal but in the histfactory
             # method we require only a single mode
-            if hasattr(self, 'histfactory') and not (
-                    isinstance(self, Signal) and no_signal_fixes):
+
+            #Vince's rehack
+#            if hasattr(self, 'histfactory') and not (
+#                    isinstance(self, Signal) and no_signal_fixes):
+            if hasattr(self, 'histfactory'):
                 # perform sample-specific items
                 self.histfactory(sample, category,
                                  systematics=do_systematics,

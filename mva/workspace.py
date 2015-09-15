@@ -441,7 +441,6 @@ def mixing_workspace(analysis, categories, masses, mixings=None,
                             cuts=None):
     hist_template = Hist([-15,-3.5,-1.5,0,1.5,3.5,15], type='D')
     channels = {}
-    print "mixings now",mixings
     log.info("mixings have become {0}".format(mixings))
     for category in analysis.iter_categories(categories):
         log.info("mixing workspace for category {0}".format(category.name))
@@ -473,8 +472,9 @@ def mixing_workspace(analysis, categories, masses, mixings=None,
             channels[mixing][category.name] = channel
             log.info("got SR moving in for CRs")
 
+    return channels
             #get crs
-            cr_template = Hist(5, 0, 1.5, type='D')
+"""            cr_template = Hist(5, 0, 1.5, type='D')
             control = analysis.make_var_channels(
                 cr_template, 'dEta_tau1_tau2',
                 CATEGORIES['mva_workspace_controls'],
@@ -500,8 +500,9 @@ def mixing_workspace(analysis, categories, masses, mixings=None,
             if mixing not in shapeControls:
                 shapeControls[mixing] = {}
             shapeControls[mixing] = shapeControl[125]
-
     return channels, controls, shapeControls
+"""
+
 
 def mass2d_workspace(analysis, categories, masses,
                      systematics=False):
