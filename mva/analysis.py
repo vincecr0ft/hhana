@@ -207,12 +207,41 @@ class Analysis(object):
             scale=self.mu,
             ggf_weight=ggf_weight,
             color='#FF0000')
-            
+
+        self.WH125 = samples.Higgs(
+            year=self.year,
+            mass=125,
+            modes=['W'],
+            systematics=self.systematics,
+            scale=self.mu,
+            ggf_weight=ggf_weight,
+            color='#FF0000')
+
+        self.ZH125 = samples.Higgs(
+            year=self.year,
+            mass=125,
+            modes=['Z'],
+            systematics=self.systematics,
+            scale=self.mu,
+            ggf_weight=ggf_weight,
+            color='#FF0000')
+
+        self.ggH125 = samples.Higgs(
+            year=self.year,
+            mass=125,
+            modes=['gg'],
+            systematics=self.systematics,
+            scale=self.mu,
+            ggf_weight=ggf_weight,
+            color='#FF0000')
+
         self.backgrounds = [
+            self.WH125,
+            self.ZH125,
+            self.ggH125,
             self.qcd,
             self.others,
             self.ztautau,
-            self.H125,
         ]
 
         self.ggf_weight = ggf_weight

@@ -23,7 +23,7 @@ export PYTHONPATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PYTHONPATH:+:$PYTHONPATH}
 # Add LHAPDFs
 export PATH=/project/atlas/users/vcroft/htautau/local/bin:$PATH
 export LD_LIBRARY_PATH=/project/atlas/users/vcroft/htautau/local/lib:$LD_LIBRARY_PATH
-export PYTHONPATH=/project/atlas/users/vcroft/htautau/local/lib/python2.7/site-packages:$PYTHONPATH
+export PYTHONPATH=/project/atlas/users/vcroft/htautau/local/lib/python2.7/site-packages:${PYTHONPATH:+:$PYTHONPATH}
 export PATH=${DIR_HIGGSTAUTAU_MVA_SETUP}${PATH:+:$PATH}
 
 if [ -f ${DIR_HIGGSTAUTAU_MVA_SETUP}/../hhntup/setup.sh ]

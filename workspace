@@ -27,7 +27,7 @@ else:
     args.masses = map(int, args.masses.split(','))
 
 if args.type == 'weighted-mixing' or 'mixing':
-    if args.mixings is None or args.mixings == [0.0]:
+    if args.mixings is None:
         args.mixings = Higgs.MIXINGS
 #    args.mixings = [-0.6]
 d_tilde=args.mixings
@@ -78,7 +78,7 @@ log.info("about to enter main loop")
 for year, year_categories in zip(years, categories):
     log.info("for year {0} and category {1}".format(str(year),year_categories))
     analysis = get_analysis(args, year=year)
-    sr = workspace_func(analysis=analysis,
+    sr, cr, scr = workspace_func(analysis=analysis,
                             categories=year_categories,
                             masses=args.masses,
                             mixings=d_tilde,
@@ -87,8 +87,8 @@ for year, year_categories in zip(years, categories):
                             **params)
     log.info("got signal regions {0}".format(str(sr)))
     signal_regions[year] = sr
-#    control_regions[year] = cr
-#    shape_control[year] = scr
+    control_regions[year] = cr
+    shape_control[year] = scr
 
 suffix = analysis.get_suffix(year=False)
 if args.type == 'var':
@@ -101,6 +101,6 @@ if args.output_suffix:
     suffix += '_' + args.output_suffix
 path = 'workspaces/hh{0}'.format(suffix.lower())
 log.info("about to write workspaces")
-#write_workspaces(path, 'hh', signal_regions, controls=control_regions, shapeControls=shape_control)
-write_workspaces(path, 'hh', signal_regions)
+write_workspaces(path, 'hh', signal_regions, controls=control_regions, shapeControls=shape_control)
+#write_workspaces(path, 'hh', signal_regions)
 
