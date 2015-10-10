@@ -359,8 +359,8 @@ mva-workspaces:
 .PHONY: mixing-workspaces
 mixing-workspaces:
 	@for sign in p m; do \
-		for mixing in 60 20; do \
-			qsub -N dtilde_$${sign}_$${mixing} -q stbcq -l pvmem=15gb launch$${sign}$${mixing}.sh; \
+		for mixing in 60 50 40 30 20 10 07 05 02; do \
+			qsub -N dtilde_$${sign}_$${mixing}_long -q stbcq -l pvmem=15gb,cput=09:55:00 launch$${sign}$${mixing}.sh; \
 		done; \
 	done
 

@@ -80,7 +80,8 @@ class Analysis(object):
                  mu=1., mixings=0.0,
                  ggf_weight=True,
                  suffix=None,
-                 norm_field=NORM_FIELD):
+                 norm_field=NORM_FIELD,
+                 mode=None,):
         self.year = year
         self.systematics = systematics
         self.use_embedding = use_embedding
@@ -124,64 +125,64 @@ class Analysis(object):
                                  markersize=1.2,
                                  linewidth=1)
 
-        self.higgs_125 = samples.Higgs(
-            year=year,
-            mass=125,
-            systematics=systematics,
-            linecolor='red',
-            linewidth=2,
-            linestyle='dashed',
-            scale=self.mu,
-            ggf_weight=ggf_weight)
+#        self.higgs_125 = samples.Higgs(
+#            year=year,
+#            mass=125,
+#            systematics=systematics,
+#            linecolor='red',
+#            linewidth=2,
+#            linestyle='dashed',
+#            scale=self.mu,
+#            ggf_weight=ggf_weight)
 
-        self.vbf_00 = samples.Higgs(
-            year=year,
-            mass=125,
-            mixing=0.0,
-            mode='VBF',
-            systematics=systematics,
-            linecolor='red',
-            linewidth=2,
-            linestyle='dashed',
-            scale=self.mu,
-            ggf_weight=ggf_weight)
+#        self.vbf_00 = samples.Higgs(
+#            year=year,
+#            mass=125,
+#            mixing=0.0,
+#            mode='VBF',
+#            systematics=systematics,
+#            linecolor='red',
+#            linewidth=2,
+#            linestyle='dashed',
+#            scale=self.mu,
+#            ggf_weight=ggf_weight)
 
-        self.vbf_52 = samples.Higgs(
-            year=year,
-            mass=125,
-            mixing=-0.2,
-            mode='VBF',
-            systematics=systematics,
-            linecolor='red',
-            linewidth=2,
-            linestyle='dashed',
-            scale=self.mu,
-            ggf_weight=ggf_weight)
+#        self.vbf_52 = samples.Higgs(
+#            year=year,
+#            mass=125,
+#            mixing=-0.2,
+#            mode='VBF',
+#            systematics=systematics,
+#            linecolor='red',
+#            linewidth=2,
+#            linestyle='dashed',
+#            scale=self.mu,
+#            ggf_weight=ggf_weight)
 
-        self.vbf_06 = samples.Higgs(
-            year=year,
-            mass=125,
-            mixing=0.6,
-            mode='VBF',
-            systematics=systematics,
-            linecolor='red',
-            linewidth=2,
-            linestyle='dashed',
-            scale=self.mu,
-            ggf_weight=ggf_weight)
+#        self.vbf_06 = samples.Higgs(
+#            year=year,
+#            mass=125,
+#            mixing=0.6,
+#            mode='VBF',
+#            systematics=systematics,
+#            linecolor='red',
+#            linewidth=2,
+#            linestyle='dashed',
+#            scale=self.mu,
+#            ggf_weight=ggf_weight)
 
 
-        self.ggf_00 = samples.Higgs(
-            year=year,
-            mass=125,
-            mixing=0.0,
-            mode='gg',
-            systematics=systematics,
-            linecolor='red',
-            linewidth=2,
-            linestyle='dashed',
-            scale=self.mu,
-            ggf_weight=ggf_weight)
+#        self.ggf_00 = samples.Higgs(
+#            year=year,
+#            mass=125,
+#            mixing=0.0,
+#            mode='gg',
+#            systematics=systematics,
+#            linecolor='red',
+#            linewidth=2,
+#            linestyle='dashed',
+#            scale=self.mu,
+#            ggf_weight=ggf_weight)
 
 
         # QCD shape region SS or !OS
@@ -199,14 +200,14 @@ class Analysis(object):
         self.qcd.scale = 1.
         self.ztautau.scale = 1.
 
-        self.H125 = samples.Higgs(
-            year=self.year,
-            mass=125,
-            modes=['W','Z','gg'],
-            systematics=self.systematics,
-            scale=self.mu,
-            ggf_weight=ggf_weight,
-            color='#FF0000')
+#        self.H125 = samples.Higgs(
+#            year=self.year,
+#            mass=125,
+#            modes=['W','Z','gg'],
+#            systematics=self.systematics,
+#            scale=self.mu,
+#            ggf_weight=ggf_weight,
+#            color='#FF0000')
 
         self.WH125 = samples.Higgs(
             year=self.year,
@@ -245,7 +246,7 @@ class Analysis(object):
         ]
 
         self.ggf_weight = ggf_weight
-        self.signals = self.get_signals(mass=125,mixing=mixings, mode='CP')
+        self.signals = self.get_signals(mass=125,mixing=mixings, mode=mode)
 
     def get_signals(self, mass=125, mixing=0.0, mode=None, scale_125=False):
         log.info("getting signals for "+str(mode)+" with mixings "+str(mixing))
@@ -469,11 +470,16 @@ class Analysis(object):
                     max_score=None,
                     systematics=True,
                     no_signal_fixes=False,
-                    weighted=True):
+                    weighted=True,
+                    no_data=False):
 
         # TODO: implement blinding
         log.info("constructing channels")
-        samples = [self.data] + self.backgrounds
+        if no_data:
+            samples = self.backgrounds
+            log.info("Vince Blinding Active")
+        else:
+            samples = [self.data] + self.backgrounds
         channel_name = 'hh_{0}_{1}'.format(self.year % 1000, category.name)
         suffix = None
         if include_signal:
@@ -502,8 +508,12 @@ class Analysis(object):
             histfactory_samples.append(sample)
 
         # create channel for this mass point
-        return histfactory.make_channel(
-            channel_name, histfactory_samples[1:], data=histfactory_samples[0])
+        if no_data:
+            return histfactory.make_channel(
+                channel_name, histfactory_samples[1:])
+        else:
+            return histfactory.make_channel(
+                channel_name, histfactory_samples[1:], data=histfactory_samples[0])
 
     def get_channel_array(self, vars,
                           category, region,
@@ -525,7 +535,8 @@ class Analysis(object):
                           bootstrap_data=False,
                           ravel=True,
                           uniform=False,
-                          hybrid_data=None):
+                          hybrid_data=None,
+                          no_data=False):
         log.info("in get channel array {0}".format(str(mixings)))
         log.info("with mode {0}".format(str(mode)))
         """
@@ -550,7 +561,11 @@ class Analysis(object):
         mixing=mixings
         # TODO: implement blinding
         log.info("constructing channels")
-        samples = [self.data] + self.backgrounds
+        if no_data:
+            samples = self.backgrounds
+            log.info("Vince Blinding Active")
+        else:
+            samples = [self.data] + self.backgrounds
         channel_name = 'hh_{0}_{1}'.format(self.year % 1000, category.name)
         suffix = None
         if include_signal:
@@ -590,10 +605,15 @@ class Analysis(object):
         field_channels = {}
         for field in vars.keys():
             # create channel for this mass point
-            channel = histfactory.make_channel(
-                channel_name + '_{0}'.format(field),
-                [s[field] for s in histfactory_samples[1:]],
-                data=histfactory_samples[0][field])
+            if no_data:
+                channel = histfactory.make_channel(
+                    channel_name + '_{0}'.format(field),
+                    [s[field] for s in histfactory_samples[1:]])
+            else:
+                channel = histfactory.make_channel(
+                    channel_name + '_{0}'.format(field),
+                    [s[field] for s in histfactory_samples[1:]],
+                    data=histfactory_samples[0][field])
             # implement hybrid data if requested
             # TODO: clean up
             if isinstance(hybrid_data, dict):
@@ -957,7 +977,7 @@ class Analysis(object):
 
     def make_var_channels(self, hist_template, expr, categories, region,
                           include_signal=False, masses=None, mode='workpace', mixings=0.0,
-                          systematics=False, normalize=True):
+                          systematics=False, normalize=True, clf=None, include_low_bdt=False, no_data=True):
         if not include_signal:
             channels = []
             for category in categories:
@@ -972,7 +992,8 @@ class Analysis(object):
                     #clf=clf,
                     #cuts=signal_region,
                     include_signal=False,
-                    systematics=systematics)
+                    systematics=systematics,
+                    no_data=no_data)
                 channels.append(contr)
         else:
             channels = {}
@@ -992,11 +1013,32 @@ class Analysis(object):
                         mixings=mixings,                                           
                         mass=mass,
                         mode=mode,
-                        systematics=systematics)
+                        systematics=systematics,
+                        no_data=no_data)
                     if mass not in channels:
                         channels[mass] = {}
                     channels[mass][category.name] = contr
-        return channels
+        if include_low_bdt:
+            bdtchannels = {}
+            if len(CATEGORIES['mva_vbf'])==1:
+                thiscategory=CATEGORIES['mva_vbf'][0]
+            for mass in masses:
+                bdt_template =Hist(8, -1, 0.6, type= 'D')
+                bdtcontr = self.get_channel(bdt_template, clf,
+                  category=thiscategory,
+                  region=region,
+                  include_signal=True,
+                  mixings=mixings,                                           
+                  mass=mass,
+                  mode=mode,
+                  systematics=systematics,
+                  no_data=no_data)
+                if mass not in bdtchannels:
+                    bdtchannels[mass] = {}
+                    bdtchannels[mass][thiscategory.name] = bdtcontr
+            return channels, bdtchannels
+        else:
+            return channels
 
     def fit_norms(self, field, template, category, region=None,
                   max_iter=10, thresh=1e-7):

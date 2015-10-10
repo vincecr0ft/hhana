@@ -53,8 +53,7 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                     shape_controls = shapeControls[year]
             else:
                 shape_controls = shapeControls
-
-            log.info("comparing {0} with {1}".format(str(mass_controls),str(shape_controls)))
+            log.info("this path is {0}".format(path))
             channels = []
             # make workspace for each category
             # include the control region in each
@@ -69,22 +68,39 @@ def write_workspaces(path, prefix, year_mass_category_channel,
                 else:
                     parity='p'
                 newname = "AllSys_cp_{}_0_{:02.0f}_{}".format(parity, abs(mass*100), prefix)
-
+                log.info("prefix is {0}".format(prefix))
                 # print newname
+                channel.name = "highbdt"
+                log.info("Channel name is ".format(channel.name))
+
+                for cr in mass_controls:
+                    log.info("control region named".format(cr.name))
+                    cr.name = "rest"
+                for scr in shape_controls:
+                    log.info("shape region named".format(scr.name))
+                    scr.name = "lowbdt"
+
                 measurement = histfactory.make_measurement(
                     newname, [channel] + mass_controls + shape_controls,
                     POI=POI,
                     const_params=CONST_PARAMS)
+                log.info("got measurement with channels:")
+                vinceschannels = measurement.GetChannels()
+                for chan in vinceschannels:
+                    log.info(chan.GetName())
                 workspace = histfactory.make_workspace(measurement, name=newname,
                                                        silence=silence)
-                with root_open(os.path.join(path, '{0}.root'.format(newname)),
+                if not os.path.exists(path+'/data'):
+                    mkdir_p(path+'/data')
+
+                with root_open(os.path.join(path+'/data', '{0}.root'.format(newname)),
                                'recreate') as workspace_file:
                     workspace.Write()
                     # mu=1 for Asimov data
 #                    measurement.SetParamValue('ATLAS_epsilon', 1)
                     histfactory.write_measurement(measurement,
                         root_file=workspace_file,
-                        xml_path=os.path.join(path, newname),
+                        xml_path=os.path.join(path, "config"),
                         silence=silence)
                 channels.append(channel)            
             log.info("length of channels is {0}".format(str(len(channels))))
@@ -466,40 +482,49 @@ def mixing_workspace(analysis, categories, masses, mixings=None,
                 mixings=comparison,
                 min_score=0.815967620756,#0.567454611796
                 mode='CPworkspace',
-                systematics=systematics)['o1']
+                systematics=systematics,
+                no_data=False)['o1']
             if mixing not in channels:
                 channels[mixing] = {}                
             channels[mixing][category.name] = channel
+
+            for sample in channel:
+                log.info("sample name: {0}".format(sample.name))
             log.info("got SR moving in for CRs")
 
 #    return channels
             #get crs
             cr_template = Hist(5, 0, 1.5, type='D')
-            control = analysis.make_var_channels(
+            control, shapeControl = analysis.make_var_channels(
                 cr_template, 'dEta_tau1_tau2',
                 CATEGORIES['mva_workspace_controls'],
                 analysis.target_region,
                 mixings=comparison,
                 mode='CPworkspace',
                 include_signal=True, masses=masses,
-                systematics=systematics)
+                clf=clf, include_low_bdt=True,
+                systematics=systematics,
+                no_data=False)
+            log.info("got controls")
             if mixing not in controls:
                 controls[mixing] = {}
-            controls[mixing] = control[125]
-
-            bins = 10
-            scr_template = Hist(8, -1, 0.6, type='D')
-            shapeControl = analysis.make_var_channels(
-                scr_template, clf,
-                CATEGORIES['mva_vbf'],
-                analysis.target_region,
-                mixings=comparison,
-                mode='CPworkspace',
-                include_signal=True, masses=masses,
-                systematics=systematics)
-            if mixing not in shapeControls:
                 shapeControls[mixing] = {}
+            controls[mixing] = control[125]
             shapeControls[mixing] = shapeControl[125]
+
+#            bins = 10
+#            scr_template = Hist(8, -1, 0.6, type='D')
+#            shapeControl = analysis.make_var_channels(
+#                scr_template, clf,
+#                CATEGORIES['mva_vbf'],
+#                analysis.target_region,
+#                mixings=comparison,
+#                mode='CPworkspace',
+#                include_signal=True, masses=masses,
+#                systematics=systematics)
+#            if mixing not in shapeControls:
+#               shapeControls[mixing] = {}
+#            shapeControls[mixing] = shapeControl[125]
     return channels, controls, shapeControls
 
 def mass2d_workspace(analysis, categories, masses,
